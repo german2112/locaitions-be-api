@@ -9,4 +9,4 @@ class ClubSchema(BaseModel):
     location: str = Field(..., max_length=100)
     exclusivity: Exclusivity = Field(None)
     promotions: List[PromotionSchema] = Field(None)
-    event: List[EventSchema] = Field(None,)
+    event: List[EventSchema] = Field(None)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-import datetime
+from datetime import datetime
 
 class VideoSchema(BaseModel):
     createdAt: datetime = Field(...)

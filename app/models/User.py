@@ -13,4 +13,5 @@ class UserSchema(BaseModel):
     phone: int = Field(...)
     role: RoleSchema = Field(None)
     preferredClubs: List[ClubSchema] = Field(None)
+    uid: str = Field(...)
     

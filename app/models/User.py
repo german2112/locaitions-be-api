@@ -10,6 +10,7 @@ class UserSchema(BaseModel):
     email: EmailStr = Field(None)
     mapsPlaceId: str = Field(None)
     location: object = Field(None)
+    birthDate: str = Field(None)
     membership: MembershipSchema = Field(None)
     phone: str = Field(None)
     role: RoleSchema = Field(None)

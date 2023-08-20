@@ -15,3 +15,8 @@ def create(user: UserSchema = Body(...)):
 def update(user: UserSchema) :
   response = typeUtilities.parse_json(userService.update_user(user))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.get("/validateUserName", response_description="Validate username", response_model=bool)
+def validateUserName(userName: str):
+  response = typeUtilities.parse_json(userService.validate_if_user_name_exist(userName))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)

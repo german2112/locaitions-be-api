@@ -23,6 +23,7 @@ def update_user(user:UserSchema):
   update_user["preferredClubs"] = user.preferredClubs or update_user.get("preferredClubs", None)
   update_user["location"] = user.location or update_user.get("location", None)
   update_user["mapsPlaceId"] = user.mapsPlaceId or update_user.get("mapsPlaceId", None)
+  update_user["userName"] = user.userName or update_user.get("userName", None)
   userRepository.update_user(user.uid,update_user)
   return {"message:": "OK","body" : update_user}
 
@@ -34,6 +35,12 @@ def validate_if_user_exist(user: UserSchema):
       userFound = user
       return userFound
   return userFound
+
+def validate_if_user_name_exist(userName: str):
+  userFound = {}
+  if userName != None:
+    userFound = userRepository.find_by_userName(userName)
+  return userFound != None
 
 def find_user_by_phone(phone: str):
  foundUser = {}

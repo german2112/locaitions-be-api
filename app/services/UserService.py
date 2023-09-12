@@ -4,10 +4,16 @@ from app.models.User import UserSchema
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 from datetime import datetime
+from dotenv import load_dotenv
 import boto3
+import os
 
-#TODO Use secret keys configuration for connection
-session = boto3.Session(profile_name='german_torres')
+load_dotenv()
+
+session = boto3.Session(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+                        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+                        region_name=os.getenv("AWS_REGION")
+                      )
 
 def create_user(user: UserSchema):
   user_existing = validate_if_user_exist(user)

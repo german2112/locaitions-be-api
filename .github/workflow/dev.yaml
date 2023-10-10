@@ -1,0 +1,45 @@
+name: locaitions-api
+on:
+  push:
+    branches: ["aws-portable-keys-connection"]
+  pull_request:
+    branches: ["dev"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Git pull
+        env:
+          AWS_EC2_PEM: ${{ secrets.AWS_EC2_PEM  }}
+          AWS_EC2_PUBLIC_IP: ${{ secrets.AWS_EC2_PUBLIC_IP  }}
+          AWS_EC2_USERNAME: ${{ secrets.AWS_EC2_USERNAME  }}
+        run: |
+          pwd
+          ssh -o StrictHostKeyChecking=no -i private_key ${AWS_EC2_USERNAME}@${AWS_EC2_PUBLIC_IP}
+            cd locaitions-be-api/
+            source env/bin/activate
+            pip install -r requirements.txt
+            git checkout aws-portable-keys-connection &&
+            git fetch --all &&
+            git reset --hard origin/main &&
+            git pull origin main &&
+            python3 -m uvicorn main:app --reload
+
+

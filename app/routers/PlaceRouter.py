@@ -14,3 +14,7 @@ def find_all(user: UserSchema, place: PlaceSchema):
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
 
 
+@placeRouter.get("/{placeId}", response_description="Get place by Id", response_model=PlaceSchema)
+def get_by_id(placeId: str):
+    response = TypeUtilities.parse_json(placeService.get_place_by_id(placeId))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)

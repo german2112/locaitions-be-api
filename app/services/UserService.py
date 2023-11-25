@@ -27,7 +27,7 @@ def create_user(user: UserSchema):
 def update_user(user:UserSchema):
   update_user = userRepository.find_by_id(user.uid)
   if(update_user == None):
-    return {"message:": "no user found with the given id.","body" : {}}
+    return {"message:": "no user found with the given id","body" : {}}
   update_user["name"] = user.name or update_user.get("name", None)
   update_user["email"] = user.email or update_user.get("email", None)
   update_user["membership"] = user.membership or update_user.get("membership", None)

@@ -39,7 +39,7 @@ jobs:
             pip install -r requirements.txt
             git checkout aws-portable-keys-connection &&
             git fetch --all &&
-            git reset --hard origin/main &&
+            git reset --hard origin/dev &&
             git pull origin dev &&
             python3 -m uvicorn main:app --reload
 EOF

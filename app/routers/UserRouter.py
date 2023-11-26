@@ -26,5 +26,8 @@ def validateUserName(userName: str):
 
 @userRouter.post("/upload-photo", response_description="Upload user photo", response_model=PhotoSchema)
 async def upload_photo(file: Annotated[UploadFile, Form()], userUid: Annotated[str, Form()]) :
-  response = await userService.upload_photo(userUid,file)
-  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+  #response = await userService.upload_photo(userUid,file)
+  return JSONResponse(status_code=status.HTTP_200_OK, content={
+    "message:": "OK",
+    "body": "https://locaitions-api-staging.s3.amazonaws.com/WhatsApp Image 2023-04-01 at 10.50.48.jpeg"
+})

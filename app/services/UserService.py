@@ -17,7 +17,7 @@ session = boto3.Session(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
 
 def create_user(user: UserSchema):
   user_existing = validate_if_user_exist(user)
-  if user_existing:
+  if user_existing != None:
       return user_existing
   user = jsonable_encoder(user)
   userRepository.insert_user(user)
@@ -42,13 +42,10 @@ def update_user(user:UserSchema):
   return {"message:": "OK","body" : update_user}
 
 def validate_if_user_exist(user: UserSchema):
-  userFound = {}
-  userSearchList = [find_user_by_email(user.email), find_user_by_phone(user.phone), find_user_by_id(user.uid)]
-  for user in userSearchList:
-    if user != {}:
-      userFound = user
-      return userFound
-  return userFound
+  foundUser = find_user_by_id(user.uid)
+  if foundUser == None:
+    return None
+  return foundUser
 
 def validate_if_user_name_exist(userName: str):
   userFound = {}

@@ -16,3 +16,4 @@ class UserSchema(BaseModel):
     role: RoleSchema = Field(None)
     preferredClubs: List[ClubSchema] = Field(None)
     uid: str = Field(...)
+    userName: str = Field(None, max_length=15)

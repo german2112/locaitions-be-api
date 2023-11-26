@@ -9,6 +9,9 @@ def find_by_email(email: str):
 def find_by_id(uid: str):
     return database.db["Users"].find_one({"uid": uid})
 
+def find_by_userName(userName: str):
+    return database.db["Users"].find_one({'userName': userName})
+
 def insert_user(user):
     return database.db["Users"].insert_one(user)
 

@@ -1,6 +1,8 @@
 from app.repositories import UserRepository as userRepository
 from app.repositories import PhotoRepository as photoRepository
+from app.repositories import UserPreferencesRepository as userPreferencesRepository
 from app.models.User import UserSchema
+from app.models.UserPreferences import UserPreferencesSchema
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 from datetime import datetime
@@ -38,7 +40,10 @@ def update_user(user:UserSchema):
   update_user["mapsPlaceId"] = user.mapsPlaceId or update_user.get("mapsPlaceId", None)
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   update_user["userName"] = user.userName or update_user.get("userName", None)
+  update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   userRepository.update_user(user.uid,update_user)
+
+  #TODO Response structure must be defined in the repository
   return {"message:": "OK","body" : update_user}
 
 def validate_if_user_exist(user: UserSchema):
@@ -120,3 +125,8 @@ def is_image_explicit(content: bytes):
         return True
       
   return False
+
+def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema):
+  userPreferencesRepository.insert_music_genre_preferences(jsonable_encoder(musicGenrePreferences))
+  #TODO modify response message for failure scenario, raise exception in case of failure
+  return {"message": "Request processed successfully"}

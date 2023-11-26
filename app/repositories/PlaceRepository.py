@@ -1,6 +1,6 @@
 from app.config import database
 
-def get():
+def get(placeFilters):
     return database.db["Clubs"].aggregate([
         {
             "$addFields": {
@@ -10,10 +10,14 @@ def get():
             }
         },
         {
+            "$match": placeFilters
+        },
+        {
             "$lookup": {
             "from": "PlacePhotos",
             "localField": "clubId",
             "foreignField": "placeId",
             "as": "placePhotos"
-        }}
+            }
+        }
     ])

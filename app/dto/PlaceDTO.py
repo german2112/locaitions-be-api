@@ -1,4 +1,5 @@
 class PlaceDTO:
+    global id
     global name
     global location
     global address
@@ -6,7 +7,8 @@ class PlaceDTO:
     global placePhotos
 
 
-    def __init__(self, name, location, address, distance, placePhotos):
+    def __init__(self, id, name, location, address, distance, placePhotos):
+        self.id = id,
         self.name = name
         self.location = location
         self.address = address

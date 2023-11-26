@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, EmailStr
 from typing import List
 from .Membership import MembershipSchema
 from .Role import RoleSchema
-from .Club import ClubSchema
+from .Place import PlaceSchema
 
 
 class UserSchema(BaseModel):
@@ -14,6 +14,6 @@ class UserSchema(BaseModel):
     membership: MembershipSchema = Field(None)
     phone: str = Field(None)
     role: RoleSchema = Field(None)
-    preferredClubs: List[ClubSchema] = Field(None)
+    preferredClubs: List[PlaceSchema] = Field(None)
     uid: str = Field(...)
     userName: str = Field(None, max_length=15)

@@ -38,6 +38,7 @@ def update_user(user:UserSchema):
   update_user["mapsPlaceId"] = user.mapsPlaceId or update_user.get("mapsPlaceId", None)
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   update_user["userName"] = user.userName or update_user.get("userName", None)
+  update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   userRepository.update_user(user.uid,update_user)
   return {"message:": "OK","body" : update_user}
 

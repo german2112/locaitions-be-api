@@ -1,15 +1,46 @@
 from app.repositories import PlaceRepository as placeRepository
 from app.models.User import UserSchema
+from app.models.Place import PlaceSchema
 from app.dto.PlaceDTO import PlaceDTO
 from app.entities.Photo import Photo
+from bson.objectid import ObjectId
 
 import geopy.distance
 
+def get_list_of_places(user: UserSchema, placeAttributesToFilter: PlaceSchema):
 
-def get_list_of_places(user: UserSchema):
-    placesList = placeRepository.get()
-    formattedPlaces = format_places_list(user, placesList)
+    placeFilters = build_places_filters(placeAttributesToFilter)
+       
+    placesList = placeRepository.get(placeFilters)
+    formattedPlaces = format_places_list(user, placesList, placeAttributesToFilter)
     return formattedPlaces
+
+def get_place_by_id(id: int):
+    placeFilter = {"_id": ObjectId(id)}
+    result = placeRepository.get(placeFilter)
+
+    if result._has_next():
+        foundPlace = result.next()
+        placePhotos = build_photo_object_of_place(foundPlace)
+        return PlaceDTO(
+                    str(foundPlace["_id"]),
+                    foundPlace["name"],
+                    foundPlace["location"],
+                    foundPlace["address"],
+                    0,
+                    placePhotos).to_dict()
+    
+    return "Place not found"
+
+def build_places_filters(placeAttributesToFilter):
+    placeFilters = {}
+    if placeAttributesToFilter.name != None:
+        placeFilters.update({"name": placeAttributesToFilter.name}) 
+
+    if placeAttributesToFilter.category != None:
+        placeFilters.update({"category": placeAttributesToFilter.category})
+
+    return placeFilters
 
 def calculate_user_to_place_distance(userCoordinates, placeCoordinates):
     if userCoordinates == None:
@@ -20,31 +51,46 @@ def calculate_user_to_place_distance(userCoordinates, placeCoordinates):
     
     return round(geopy.distance.geodesic(userCoordinates, placeCoordinates).km,2)
     
-def format_places_list(user: UserSchema,placesList):
+def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: PlaceSchema):
     if placesList == None:
         return "List of places cannot be empty"
     
-    userCoordinates = (user.location["lat"], user.location["lng"])
     formattedPlaces = []
 
     for place in placesList:
-        photo = []
-        if len(place["placePhotos"]) != 0:
-            photo = Photo(place["placePhotos"][0]["filename"],
-                        place["placePhotos"][0]["fileUrl"],
-                        place["placePhotos"][0]["createdAt"]
-                        ).to_dict()
-        
-        placeCoordinates = (place["location"]["lat"], place["location"]["lng"])
-        distanceBetweenUserAndPlace = calculate_user_to_place_distance(userCoordinates, placeCoordinates)
-        placeResult = PlaceDTO(
-            place["name"],
-            place["location"],
-            place["address"],
-            str(distanceBetweenUserAndPlace) + "km",
-            photo)
+        validatedDistanceBetweenPlaceAndUser = validate_if_place_inside_user_range(user, placeAttributesToFilter, place)
+        if validatedDistanceBetweenPlaceAndUser >= 0:
+            
+            photo = build_photo_object_of_place(place)
+            
+            placeResult = PlaceDTO(
+                str(place["_id"]),
+                place["name"],
+                place["location"],
+                place["address"],
+                str(validatedDistanceBetweenPlaceAndUser) + "km",
+                photo)
 
-        formattedPlaces.append(placeResult.to_dict())
-    
+            formattedPlaces.append(placeResult.to_dict())
+
     return formattedPlaces
+
+def validate_if_place_inside_user_range(user: UserSchema, placeAttributesToFilter, place):
+    userCoordinates = (user.location["lat"], user.location["lng"])
     
+    minimumDistance = placeAttributesToFilter.minimumDistance if placeAttributesToFilter.minimumDistance != None else 20
+    placeOutOfUserRange = -1
+    placeCoordinates = (place["location"]["lat"], place["location"]["lng"])
+    distanceBetweenUserAndPlace = calculate_user_to_place_distance(userCoordinates, placeCoordinates)
+    if distanceBetweenUserAndPlace <= minimumDistance:
+        return distanceBetweenUserAndPlace
+    return placeOutOfUserRange
+
+def build_photo_object_of_place(place):
+    photo = []
+    if len(place["placePhotos"]) != 0:
+        photo = Photo(place["placePhotos"][0]["filename"],
+                    place["placePhotos"][0]["fileUrl"],
+                    place["placePhotos"][0]["createdAt"]
+                    ).to_dict()
+    return photo

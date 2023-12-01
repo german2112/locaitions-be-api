@@ -43,4 +43,5 @@ jobs:
             git reset --hard origin/dev &&
             git pull origin dev &&
             python3 -m uvicorn main:app --reload
+            exit
           EOF || echo "Failed to SSH and run commands"

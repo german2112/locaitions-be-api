@@ -4,17 +4,16 @@ from app.models.Place import PlaceSchema
 from app.models.User import UserSchema
 from app.services import PlaceService as placeService
 from app.utils import TypeUtilities as TypeUtilities
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Params, paginate
 
 placeRouter = APIRouter(prefix="/place")
 
 #Get All Places
 @placeRouter.post("", 
-                  response_description="Get list of places", 
-                  response_model=Page[PlaceSchema]
+                  response_description="Get list of places"
                   )
-def find_all(user: UserSchema, params: Params):
-    response = TypeUtilities.parse_json(placeService.get_list_of_places(user))
+def find_all(user: UserSchema, place: PlaceSchema, params: Params):
+    response = TypeUtilities.parse_json(placeService.get_list_of_places(user, place))
     return paginate(response, params)
 
 

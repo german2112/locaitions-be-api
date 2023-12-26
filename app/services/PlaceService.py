@@ -5,7 +5,7 @@ from app.dto.PlaceDTO import PlaceDTO
 from app.entities.Photo import Photo
 from bson.objectid import ObjectId
 
-import geopy.distance
+from geopy.distance import great_circle as GRC
 
 def get_list_of_places(user: UserSchema, placeAttributesToFilter: PlaceSchema):
 
@@ -28,14 +28,15 @@ def get_place_by_id(id: int):
                     foundPlace["location"],
                     foundPlace["address"],
                     0,
-                    placePhotos).to_dict()
+                    placePhotos,
+                    foundPlace['description']).to_dict()
     
     return "Place not found"
 
 def build_places_filters(placeAttributesToFilter):
     placeFilters = {}
     if placeAttributesToFilter.name != None:
-        placeFilters.update({"name": placeAttributesToFilter.name}) 
+        placeFilters.update({"name": {'$regex':placeAttributesToFilter.name, '$options': 'i'}}) 
 
     if placeAttributesToFilter.category != None:
         placeFilters.update({"category": placeAttributesToFilter.category})
@@ -49,7 +50,7 @@ def calculate_user_to_place_distance(userCoordinates, placeCoordinates):
     if placeCoordinates == None:
         return "Place Coordinates cannot be empty."
     
-    return round(geopy.distance.geodesic(userCoordinates, placeCoordinates).km,2)
+    return round(GRC(userCoordinates, placeCoordinates).km,2)
     
 def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: PlaceSchema):
     if placesList == None:
@@ -69,7 +70,9 @@ def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: Pla
                 place["location"],
                 place["address"],
                 str(validatedDistanceBetweenPlaceAndUser) + "km",
-                photo)
+                photo,
+                place["description"]
+                )
 
             formattedPlaces.append(placeResult.to_dict())
 

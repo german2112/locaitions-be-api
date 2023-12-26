@@ -12,3 +12,4 @@ class PlaceSchema(BaseModel):
     exclusivity: ExclusivitySchema = Field(None)
     promotions: List[PromotionSchema] = Field(None)
     event: List[EventSchema] = Field(None)
+    description: str = Field(None)

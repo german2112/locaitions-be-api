@@ -3,12 +3,15 @@ from app.repositories import PhotoRepository as photoRepository
 from app.repositories import UserPreferencesRepository as userPreferencesRepository
 from app.models.User import UserSchema
 from app.models.UserPreferences import UserPreferencesSchema
+from app.models.User import SocialMedia
+from typing import List
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 from datetime import datetime
 from dotenv import load_dotenv
 import boto3
 import os
+from copy import deepcopy
 
 load_dotenv()
 
@@ -130,3 +133,41 @@ def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema)
   userPreferencesRepository.insert_music_genre_preferences(jsonable_encoder(musicGenrePreferences))
   #TODO modify response message for failure scenario, raise exception in case of failure
   return {"message": "Request processed successfully"}
+
+def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
+  update_user: UserSchema = find_user_by_id(uid)
+  
+  if(update_user == None):
+    return {"message": "No user found with that uid"}
+  
+  user_item = deepcopy(update_user)
+  
+  social_media_links: List[SocialMedia] = []
+  
+  if 'socialMediaLinks' in dir(user_item) or user_item['socialMediaLinks'] != None:
+    social_media_links = user_item['socialMediaLinks']
+  else:
+    user_item['socialMediaLinks'] = [{'url_type': socialMediaItem.url_type.value, 'url': socialMediaItem.url}]
+  
+  found_social_media_index: int = None
+  
+  for i, social_media in enumerate(social_media_links):
+    if(social_media['url_type'] == socialMediaItem.url_type.value):
+      found_social_media_index = i
+      break
+  
+  if found_social_media_index != None:
+    social_media_links[found_social_media_index] = {
+      'url': socialMediaItem.url,
+      'url_type': socialMediaItem.url_type.value
+    }
+    user_item['socialMediaLinks'] = social_media_links
+  else:
+    socialMediaItem = vars(socialMediaItem)
+    socialMediaItem['url_type'] = socialMediaItem['url_type'].value
+    social_media_links.append(socialMediaItem)
+    user_item['socialMediaLinks'] = social_media_links
+  
+  userRepository.update_user(uid, user_item)
+  
+  return {"message:": "OK","body" : user_item['socialMediaLinks']}

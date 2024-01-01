@@ -4,6 +4,7 @@ from app.models.User import UserSchema
 from app.services import UserService as userService
 from app.utils import TypeUtilities as typeUtilities
 from app.models.Photo import PhotoSchema
+from app.models.User import SocialMedia
 from app.models.UserPreferences import UserPreferencesSchema
 from typing import Annotated
 from fastapi import UploadFile, Form
@@ -33,4 +34,9 @@ async def upload_photo(file: Annotated[UploadFile, Form()], userUid: Annotated[s
 @userRouter.post("/musicgenre-preferences", response_description="Insert user's music genre preferences", response_model=bool, tags=["Users"])
 def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema):
   response = typeUtilities.parse_json(userService.insert_music_genre_preferences(musicGenrePreferences))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.post("/social-media-link/{uid}", response_description="Update a social media link", response_model=SocialMedia, tags=["Users", "social_media_link"])
+def update_social_media_link(uid: str, socialMediaItem: SocialMedia = Body(...)):
+  response = typeUtilities.parse_json(userService.update_social_media_link(uid, socialMediaItem))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)

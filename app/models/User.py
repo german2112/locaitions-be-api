@@ -9,7 +9,7 @@ class SocialMediaTypes(Enum):
     FACEBOOK = "Facebook"
     INSTAGRAM = "Instagram"
     YOUTUBE = "Youtube"
-    TIKTOK = "Tik Tok"
+    TIKTOK = "TikTok"
     
 class SocialMedia(BaseModel):
     url_type: SocialMediaTypes

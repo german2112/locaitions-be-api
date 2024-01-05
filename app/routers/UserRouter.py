@@ -21,7 +21,7 @@ def update(user: UserSchema) :
   response = typeUtilities.parse_json(userService.update_user(user))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@userRouter.get("/validate-username", response_description="Validate username", response_model=bool, tags=["Users"])
+@userRouter.get("/validate-username/{userName}", response_description="Validate username", response_model=bool, tags=["Users"])
 def validate_username(userName: str):
   response = typeUtilities.parse_json(userService.validate_if_user_name_exist(userName))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
@@ -39,4 +39,9 @@ def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema)
 @userRouter.post("/social-media-link/{uid}", response_description="Update a social media link", response_model=SocialMedia, tags=["Users", "social_media_link"])
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia = Body(...)):
   response = typeUtilities.parse_json(userService.update_social_media_link(uid, socialMediaItem))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.delete("/social-media-link/{uid}", response_description="delete social media link", response_model=SocialMedia, tags=["Users", "social_media_link"])
+def delete_social_media_link(uid: str, socialMediaItem: SocialMedia = Body(...)):
+  response = typeUtilities.parse_json(userService.delete_social_media_link(uid, socialMediaItem))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)

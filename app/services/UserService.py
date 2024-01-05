@@ -170,4 +170,10 @@ def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
   
   userRepository.update_user(uid, user_item)
   
-  return {"message:": "OK","body" : user_item['socialMediaLinks']}
+  return {"message": "OK","body" : user_item['socialMediaLinks']}
+
+def delete_social_media_link(uid: str ,socialMediaItem: SocialMedia):
+  userRepository.remove_social_media_link(uid, socialMediaItem)
+  user: UserSchema = find_user_by_id(uid)
+  social_media_links: List[SocialMedia] = user.get('socialMediaLinks')
+  return {"message": "OK", "body": social_media_links}

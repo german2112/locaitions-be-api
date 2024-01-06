@@ -14,6 +14,10 @@ class SocialMediaTypes(Enum):
 class SocialMedia(BaseModel):
     url_type: SocialMediaTypes
     url: str
+    
+class Gender(Enum):
+    MALE = "Male"
+    FEMALE = "Female"
 
 class UserSchema(BaseModel):    
     name: str = Field(None, max_length=40)
@@ -28,6 +32,7 @@ class UserSchema(BaseModel):
     uid: str = Field(...)
     userName: str = Field(None, max_length=15)
     socialMediaLinks: List[SocialMedia] = Field(None)
+    gender: Gender = Field(None)
     
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']

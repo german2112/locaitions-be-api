@@ -33,6 +33,7 @@ def update_user(user:UserSchema):
   update_user = userRepository.find_by_id(user.uid)
   if(update_user == None):
     return {"message:": "no user found with the given id","body" : {}}
+  
   update_user["name"] = user.name or update_user.get("name", None)
   update_user["email"] = user.email or update_user.get("email", None)
   update_user["membership"] = user.membership or update_user.get("membership", None)
@@ -44,6 +45,7 @@ def update_user(user:UserSchema):
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   update_user["userName"] = user.userName or update_user.get("userName", None)
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
+  update_user['gender'] = user.gender.value or update_user.get("gender", None)
   userRepository.update_user(user.uid,update_user)
 
   #TODO Response structure must be defined in the repository

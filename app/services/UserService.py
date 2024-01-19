@@ -33,7 +33,6 @@ def update_user(user:UserSchema):
   update_user = userRepository.find_by_id(user.uid)
   if(update_user == None):
     return {"message:": "no user found with the given id","body" : {}}
-  
   update_user["name"] = user.name or update_user.get("name", None)
   update_user["email"] = user.email or update_user.get("email", None)
   update_user["membership"] = user.membership or update_user.get("membership", None)
@@ -45,7 +44,12 @@ def update_user(user:UserSchema):
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
   update_user["userName"] = user.userName or update_user.get("userName", None)
   update_user["birthDate"] = user.birthDate or update_user.get("birthDate", None)
-  update_user['gender'] = user.gender.value or update_user.get("gender", None)
+  update_user["nationality"] = user.nationality or update_user.get("nationality", None)
+  try:
+      update_user['gender'] = getattr(user.gender, 'value', None) or update_user.get("gender", None)
+  except AttributeError:
+      update_user['gender'] = update_user.get("gender", None)
+  
   userRepository.update_user(user.uid,update_user)
 
   #TODO Response structure must be defined in the repository
@@ -82,31 +86,33 @@ def find_user_by_id(uid: str):
   return foundUser
 
 #TODO Simplify the method in sub-methods
-async def upload_photo(userUid: str ,file: UploadFile):
+async def upload_photos(userUid: str ,files: List[UploadFile]):
   #TODO Insert name of the bucket into a constant file and import
   bucketName = "locaitions-api-staging"
 
   uploadedImageURL = ""
-
-  if not is_image_explicit(file.file.read()):
-    #Return pointer to the beggining of the file
-    await file.seek(0)
-
-    client = session.resource("s3")
-    bucket = client.Bucket(bucketName)
-    #TODO Verify ACLs configuration for prod env
-    bucket.upload_fileobj(file.file, file.filename)
-    uploadedImageURL = f"https://{bucketName}.s3.amazonaws.com/{file.filename}"
-
-    uploadPhotoToDB = {
+  
+  uploadedImageUrls: List[str] = []
+  
+  for file in files:
+    if not is_image_explicit(file.file.read()):
+      #Return pointer to the beggining of the file
+      #TODO Verify ACLs configuration for prod env
+      await file.seek(0)
+      client = session.resource("s3")
+      bucket = client.Bucket(bucketName)
+      bucket.upload_fileobj(file.file, file.filename)
+      uploadedImageURL = f"https://{bucketName}.s3.amazonaws.com/{file.filename}"
+      uploadedImageUrls.append(uploadedImageURL)
+      uploadPhotoToDB = {
                       "filename": file.filename,
                        "fileUrl": uploadedImageURL,
                        "userUid": userUid,
                        "createdAt": datetime.now()
-                       }
-    photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
+                      }
+      photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
 
-  return {"message:": "OK","body":uploadedImageURL}
+  return {"message:": "OK","body":uploadedImageUrls}
 
 def is_image_explicit(content: bytes):
   client = session.client('rekognition')
@@ -132,9 +138,25 @@ def is_image_explicit(content: bytes):
   return False
 
 def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema):
-  userPreferencesRepository.insert_music_genre_preferences(jsonable_encoder(musicGenrePreferences))
+  try:
+    userPreferencesRepository.insert_music_genre_preferences(jsonable_encoder(musicGenrePreferences))
+    return {"message": "Request processed successfully"}
+  except:
+    return {"message": "Request Failed to add music genres"}
   #TODO modify response message for failure scenario, raise exception in case of failure
-  return {"message": "Request processed successfully"}
+
+def get_music_genre_preferences_by_user(uid: str):
+  try:
+    user_preferences = userPreferencesRepository.find_by_user_uid(uid)
+    preferences = list(user_preferences)
+    for preference in preferences:
+     preference["_id"] = str(preference["_id"])
+     for musicGenre in preference['musicGenres']:
+       musicGenre["_id"] = str(musicGenre["_id"])
+    return {"body": preferences[0]}
+  except:
+    return {"message": "error while fetching user music genre preferences"}
+
 
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
   update_user: UserSchema = find_user_by_id(uid)

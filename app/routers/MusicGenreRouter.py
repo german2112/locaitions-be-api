@@ -3,6 +3,7 @@ from fastapi import APIRouter, status
 from app.services import MusicGenreService as musicGenreService
 from app.models.MusicGenre import MusicGenreSchema
 from app.utils import TypeUtilities as typeUtilities
+from typing import List
 
 userRouter = APIRouter(prefix="/music-genre")
 
@@ -15,3 +16,4 @@ def find_all():
 def create(musicGenre: MusicGenreSchema):
   response = typeUtilities.parse_json(musicGenreService.insert_music_genre(musicGenre))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+    

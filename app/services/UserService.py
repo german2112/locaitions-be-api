@@ -153,7 +153,7 @@ def get_music_genre_preferences_by_user(uid: str):
      preference["_id"] = str(preference["_id"])
      for musicGenre in preference['musicGenres']:
        musicGenre["_id"] = str(musicGenre["_id"])
-    return {"body": preferences[0]}
+    return {"body": preferences[0] if preferences and len(preferences) > 0 else preferences}
   except:
     return {"message": "error while fetching user music genre preferences"}
 

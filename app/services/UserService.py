@@ -91,8 +91,8 @@ async def upload_photos(userUid: str ,files: List[UploadFile]):
   bucketName = "locaitions-api-staging"
 
   uploadedImageURL = ""
-  
-  uploadedImageUrls: List[str] = []
+
+  result = {"explicitImages": [], "uploadedImages": []}
   
   for file in files:
     if not is_image_explicit(file.file.read()):
@@ -103,7 +103,7 @@ async def upload_photos(userUid: str ,files: List[UploadFile]):
       bucket = client.Bucket(bucketName)
       bucket.upload_fileobj(file.file, file.filename)
       uploadedImageURL = f"https://{bucketName}.s3.amazonaws.com/{file.filename}"
-      uploadedImageUrls.append(uploadedImageURL)
+      result["uploadedImages"].append(uploadedImageURL)
       uploadPhotoToDB = {
                       "filename": file.filename,
                        "fileUrl": uploadedImageURL,
@@ -111,8 +111,10 @@ async def upload_photos(userUid: str ,files: List[UploadFile]):
                        "createdAt": datetime.now()
                       }
       photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
+    else:
+      result["explicitImages"].append(file.filename)
 
-  return {"message:": "OK","body":uploadedImageUrls}
+  return {"message:": "OK","body":result}
 
 def is_image_explicit(content: bytes):
   client = session.client('rekognition')

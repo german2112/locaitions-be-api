@@ -33,6 +33,7 @@ class UserSchema(BaseModel):
     userName: str = Field(None, max_length=15)
     socialMediaLinks: List[SocialMedia] = Field(None)
     gender: Gender = Field(None)
+    nationality: str = Field(None)
     
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']

@@ -16,3 +16,4 @@ def get_music_genre_list():
 def insert_music_genre(musicGenre: MusicGenre):
     #TODO fix response to deliver the object instead of only the id
     return MusicGenreRepository.insert_music_genre(jsonable_encoder(musicGenre)).inserted_id
+    

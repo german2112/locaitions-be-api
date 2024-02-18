@@ -5,3 +5,4 @@ class PhotoSchema(BaseModel):
     fileUrl: str = Field(..., max_length=100)
     userUid: str = Field(...)
     createdAt: datetime = Field(...)
+    isProfile: bool = Field(False)

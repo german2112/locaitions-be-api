@@ -28,14 +28,19 @@ def validate_username(userName: str):
   response = typeUtilities.parse_json(userService.validate_if_user_name_exist(userName))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@userRouter.get("/profile/{uid}", response_description="public Profile user information", response_model=UserSchema, tags=["User", "Public", "Profile"])
+def get_public_profile(uid: str):
+  response = typeUtilities.parse_json(userService.get_public_profile(uid))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
 @userRouter.get("/user-preferences/{uid}", response_description="Get list of music genres for user", response_model=UserPreferenceResponse, tags=["MusicGenre"])
 def find_by_user(uid: str):
   response = typeUtilities.parse_json(userService.get_music_genre_preferences_by_user(uid))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @userRouter.post("/upload-photo", response_description="Upload user photo", response_model=PhotoSchema, tags=["Users"])
-async def upload_photo(files: Annotated[List[UploadFile], Form()], userUid: Annotated[str, Form()]) :
-  response = await userService.upload_photos(userUid,files)
+async def upload_photo(files: Annotated[List[UploadFile], Form()], userUid: Annotated[str, Form()], isProfile: Annotated[bool, Form()]) :
+  response = await userService.upload_photos(userUid,files, isProfile)
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @userRouter.post("/musicgenre-preferences", response_description="Insert user's music genre preferences", response_model=bool, tags=["Users"])

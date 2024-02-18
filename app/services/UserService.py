@@ -9,6 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 from datetime import datetime
 from dotenv import load_dotenv
+from app.common import constants
 import boto3
 import os
 from copy import deepcopy
@@ -86,9 +87,8 @@ def find_user_by_id(uid: str):
   return foundUser
 
 #TODO Simplify the method in sub-methods
-async def upload_photos(userUid: str ,files: List[UploadFile]):
-  #TODO Insert name of the bucket into a constant file and import
-  bucketName = "locaitions-api-staging"
+async def upload_photos(userUid: str ,files: List[UploadFile], isProfile: bool):
+  bucketName = constants.AWS_BUCKET_NAME
 
   uploadedImageURL = ""
   
@@ -110,7 +110,11 @@ async def upload_photos(userUid: str ,files: List[UploadFile]):
                        "userUid": userUid,
                        "createdAt": datetime.now()
                       }
-      photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
+      
+      if not isProfile or isProfile is None:
+        photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
+      else:
+        photoRepository.upload_profile_photo(jsonable_encoder({**uploadPhotoToDB, "isProfile": True}))
 
   return {"message:": "OK","body":uploadedImageUrls}
 
@@ -201,3 +205,21 @@ def delete_social_media_link(uid: str ,socialMediaItem: SocialMedia):
   user: UserSchema = find_user_by_id(uid)
   social_media_links: List[SocialMedia] = user.get('socialMediaLinks')
   return {"message": "OK", "body": social_media_links}
+
+def get_public_profile(uid: str):
+  foundUser = userRepository.find_by_id(uid)
+  foundUserPictures = list(photoRepository.find_by_user_uid(uid))
+  formattedUser = {
+    'name': foundUser.get('name', None),
+    'email': foundUser.get('email', None),
+    'location': foundUser.get('location', None),
+    'birthDate': foundUser.get('birthDate', None),
+    'phone': foundUser.get('phone', None),
+    'uid': foundUser.get('uid', None),
+    'userName': foundUser.get('userName', None),
+    'socialMediaLinks': foundUser.get('socialMediaLinks', None),
+    'gender': foundUser.get('gender', None),
+    'nationality': foundUser.get('nationality', None),
+    'userPictures': foundUserPictures
+  }
+  return {"message": "OK", "body": formattedUser}

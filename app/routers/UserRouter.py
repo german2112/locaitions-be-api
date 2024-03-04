@@ -10,6 +10,7 @@ from app.models.UserPreferences import UserPreferenceResponse
 from typing import Annotated
 from fastapi import UploadFile, Form
 from typing import List
+from app.entities.Filter import UserFilter
 
 userRouter = APIRouter(prefix="/user")
 
@@ -39,8 +40,8 @@ def find_by_user(uid: str):
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @userRouter.post("/upload-photo", response_description="Upload user photo", response_model=PhotoSchema, tags=["Users"])
-async def upload_photo(files: Annotated[List[UploadFile], Form()], userUid: Annotated[str, Form()], isProfile: Annotated[bool, Form()]) :
-  response = await userService.upload_photos(userUid,files, isProfile)
+async def upload_photo(files: Annotated[List[UploadFile], Form()], uid: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False):
+  response = await userService.upload_photos(uid, files, isProfile)
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @userRouter.post("/musicgenre-preferences", response_description="Insert user's music genre preferences", response_model=bool, tags=["Users"])
@@ -51,6 +52,11 @@ def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema)
 @userRouter.post("/social-media-link/{uid}", response_description="Update a social media link", response_model=SocialMedia, tags=["Users", "social_media_link"])
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia = Body(...)):
   response = typeUtilities.parse_json(userService.update_social_media_link(uid, socialMediaItem))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.post("/filters-preferences/{uid}", response_description="Insert user's filter preferences", response_model=UserPreferencesSchema, tags=["Users", "Preferences", "Filters"])
+def insert_filter_preference(uid: str, filterPreference = Body(...)):
+  response = typeUtilities.parse_json(userService.insert_filter_preference(uid, filterPreference))
   return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @userRouter.delete("/social-media-link/{uid}", response_description="delete social media link", response_model=SocialMedia, tags=["Users", "social_media_link"])

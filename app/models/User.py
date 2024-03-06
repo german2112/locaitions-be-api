@@ -4,6 +4,7 @@ from .Membership import MembershipSchema
 from .Role import RoleSchema
 from .Place import PlaceSchema
 from enum import Enum
+from app.models.UserPreferences import UserPreferencesSchema
 
 class SocialMediaTypes(Enum):
     FACEBOOK = "Facebook"
@@ -29,11 +30,12 @@ class UserSchema(BaseModel):
     phone: str = Field(None)
     role: RoleSchema = Field(None)
     preferredClubs: List[PlaceSchema] = Field(None)
-    uid: str = Field(...)
+    uid: str = Field(None)
     userName: str = Field(None, max_length=15)
     socialMediaLinks: List[SocialMedia] = Field(None)
     gender: Gender = Field(None)
     nationality: str = Field(None)
+    preferences: UserPreferencesSchema = Field(None)
     
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']

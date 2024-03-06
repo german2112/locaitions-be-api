@@ -13,6 +13,7 @@ from app.common import constants
 import boto3
 import os
 from copy import deepcopy
+from app.entities.Filter import UserFilter
 
 load_dotenv()
 
@@ -57,9 +58,18 @@ def update_user(user:UserSchema):
   return {"message:": "OK","body" : update_user}
 
 def validate_if_user_exist(user: UserSchema):
-  foundUser = find_user_by_id(user.uid)
-  if foundUser == None:
-    return None
+  try:
+    foundUser = find_user_by_id(user.uid)
+    userPreferences = userPreferencesRepository.find_by_user_uid(user.uid)
+  except:
+    return {"message": "Error while getting user preferences" }
+  else:
+    if foundUser == None:
+      return None
+    
+    userPreferences = list(userPreferences)
+    if len(userPreferences) > 0:
+      foundUser["preferences"] = userPreferences[0]
   return foundUser
 
 def validate_if_user_name_exist(userName: str):
@@ -157,6 +167,7 @@ def get_music_genre_preferences_by_user(uid: str):
      preference["_id"] = str(preference["_id"])
      for musicGenre in preference['musicGenres']:
        musicGenre["_id"] = str(musicGenre["_id"])
+       
     return {"body": preferences[0] if preferences and len(preferences) > 0 else preferences}
   except:
     return {"message": "error while fetching user music genre preferences"}
@@ -223,3 +234,7 @@ def get_public_profile(uid: str):
     'userPictures': foundUserPictures
   }
   return {"message": "OK", "body": formattedUser}
+
+def insert_filter_preference(uid: str, filter: UserFilter):
+  updatedPeferences = userPreferencesRepository.insert_filter_preference(uid, filter)
+  return {"message": "OK", "body": updatedPeferences}

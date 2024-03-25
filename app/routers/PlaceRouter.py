@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
 from app.models.Place import PlaceSchema
 from app.models.User import UserSchema
 from app.services import PlaceService as placeService
 from app.utils import TypeUtilities as TypeUtilities
 from fastapi_pagination import Params, paginate
+from app.common.token_verification import verify_firebase_token
 
 placeRouter = APIRouter(prefix="/place")
 
@@ -12,12 +13,12 @@ placeRouter = APIRouter(prefix="/place")
 @placeRouter.post("", 
                   response_description="Get list of places"
                   )
-def find_all(user: UserSchema, place: PlaceSchema, params: Params):
+def find_all(user: UserSchema, place: PlaceSchema, params: Params, decoded_token: dict = Depends(verify_firebase_token)):
     response = TypeUtilities.parse_json(placeService.get_list_of_places(user, place))
     return paginate(response, params)
 
 
 @placeRouter.get("/{placeId}", response_description="Get place by Id", response_model=PlaceSchema)
-def get_by_id(placeId: str):
+def get_by_id(placeId: str, decoded_token: dict = Depends(verify_firebase_token)):
     response = TypeUtilities.parse_json(placeService.get_place_by_id(placeId))
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)

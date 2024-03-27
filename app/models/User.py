@@ -36,6 +36,7 @@ class UserSchema(BaseModel):
     gender: Gender = Field(None)
     nationality: str = Field(None)
     preferences: UserPreferencesSchema = Field(None)
+    agoraChatUser: str = Field(None)
     
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']

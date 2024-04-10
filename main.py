@@ -4,6 +4,7 @@ from app.routers import PlaceRouter as placerRouter
 from app.routers import MusicGenreRouter as musicGenreRouter
 from app.routers import PhotoRouter as photoRouter
 from app.routers import AgoraRouter as agoraRouter
+from app.routers import LiveVideoRouter as liveStreamRouter
 from fastapi_pagination import add_pagination
 from fastapi.middleware.cors import CORSMiddleware
 import firebase_admin
@@ -28,6 +29,7 @@ app.include_router(placerRouter.placeRouter)
 app.include_router(musicGenreRouter.userRouter)
 app.include_router(photoRouter.userRouter)
 app.include_router(agoraRouter.agoraRouter)
+app.include_router(liveStreamRouter.liveVideoRouter)
 
 add_pagination(app)
 

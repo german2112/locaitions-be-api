@@ -8,11 +8,10 @@ class PlaceDTO:
     global description
 
 
-    def __init__(self, id, name, location, address, distance, placePhotos, description):
+    def __init__(self, id, name, location, distance, placePhotos, description):
         self.id = id,
         self.name = name
         self.location = location
-        self.address = address
         self.distance = distance
         self.placePhotos = placePhotos
         self.description = description

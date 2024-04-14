@@ -26,7 +26,6 @@ def get_place_by_id(id: int):
                     str(foundPlace["_id"]),
                     foundPlace["name"],
                     foundPlace["location"],
-                    foundPlace["address"],
                     0,
                     placePhotos,
                     foundPlace['description']).to_dict()
@@ -59,7 +58,7 @@ def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: Pla
     formattedPlaces = []
 
     for place in placesList:
-        validatedDistanceBetweenPlaceAndUser = validate_if_place_inside_user_range(user, placeAttributesToFilter, place)
+        validatedDistanceBetweenPlaceAndUser = validate_if_place_inside_user_range(user, placeAttributesToFilter, place["location"]["mainCoordinates"]["coordinates"])
         if validatedDistanceBetweenPlaceAndUser >= 0:
             
             photo = build_photo_object_of_place(place)
@@ -68,7 +67,6 @@ def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: Pla
                 str(place["_id"]),
                 place["name"],
                 place["location"],
-                place["address"],
                 str(validatedDistanceBetweenPlaceAndUser) + "km",
                 photo,
                 place["description"]
@@ -83,7 +81,7 @@ def validate_if_place_inside_user_range(user: UserSchema, placeAttributesToFilte
     
     minimumDistance = placeAttributesToFilter.minimumDistance if placeAttributesToFilter.minimumDistance != None else 20
     placeOutOfUserRange = -1
-    placeCoordinates = (place["location"]["lat"], place["location"]["lng"])
+    placeCoordinates = (place[1], place[0])
     distanceBetweenUserAndPlace = calculate_user_to_place_distance(userCoordinates, placeCoordinates)
     if distanceBetweenUserAndPlace <= minimumDistance:
         return distanceBetweenUserAndPlace

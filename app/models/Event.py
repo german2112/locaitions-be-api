@@ -3,6 +3,12 @@ from typing import List
 from datetime import datetime
 from .Video import VideoSchema
 from .Comment import CommentSchema
+from enum import Enum
+
+class EventStatus(Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SCHEDULED = "SCHEDULED"
 
 class EventSchema(BaseModel):
     uid: str = Field(None)
@@ -11,3 +17,4 @@ class EventSchema(BaseModel):
     date: datetime = Field(None)#TODO CHANGE TO REQUIRED
     video: VideoSchema = Field(None)
     comment: List[CommentSchema] = Field(None)
+    status: EventStatus = Field(None)

@@ -28,60 +28,60 @@ session = boto3.Session(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
 
 
 async def create_user(user: UserSchema):
-    user_existing = validate_if_user_exist(user)
-    if user_existing != None:
-        return user_existing
+    userExisting = validate_if_user_exist(user)
+    if userExisting != None:
+        return userExisting
     user = jsonable_encoder(user)
-    agora_user = await _generate_agora_user(user["uid"])
-    user["agoraChatUser"] = agora_user["username"]
+    agoraUser = await _generate_agora_user(user["uid"])
+    user["agoraChatUser"] = agoraUser["username"]
     userRepository.insert_user(user)
-    created_user = find_user_by_id(user["uid"])
-    return created_user
+    createdUser = find_user_by_id(user["uid"])
+    return createdUser
 
 
 async def _generate_agora_user(uid: str):
-    app_token = generate_app_token()
-    user_data = {
+    appToken = generate_app_token()
+    userData = {
         "username": f"user-x-{uid[-4:]}",
         "password": str(uuid.uuid4())
     }
-    headers = {"Authorization": f"Bearer {app_token['body']}"}
-    request_url = f'https://{os.getenv("AGORA_CHAT_HOST")}/{os.getenv("AGORA_ORG_NAME")}/{os.getenv("AGORA_APP_NAME")}/users'
+    headers = {"Authorization": f"Bearer {appToken['body']}"}
+    requestUrl = f'https://{os.getenv("AGORA_CHAT_HOST")}/{os.getenv("AGORA_ORG_NAME")}/{os.getenv("AGORA_APP_NAME")}/users'
     async with httpx.AsyncClient() as client:
-        response = await client.post(request_url, headers=headers, json=user_data)
+        response = await client.post(requestUrl, headers=headers, json=userData)
         if response.status_code == 200:
-            return user_data
+            return userData
            
         
 def update_user(user: UserSchema):
-    update_user = userRepository.find_by_id(user.uid)
-    if (update_user == None):
+    updateUser = userRepository.find_by_id(user.uid)
+    if (updateUser == None):
         return {"message:": "no user found with the given id", "body": {}}
-    update_user["name"] = user.name or update_user.get("name", None)
-    update_user["email"] = user.email or update_user.get("email", None)
-    update_user["membership"] = user.membership or update_user.get(
+    updateUser["name"] = user.name or updateUser.get("name", None)
+    updateUser["email"] = user.email or updateUser.get("email", None)
+    updateUser["membership"] = user.membership or updateUser.get(
         "membership", None)
-    update_user["phone"] = user.phone or update_user.get("phone", None)
-    update_user["role"] = user.role or update_user.get("role", None)
-    update_user["preferredClubs"] = user.preferredClubs or update_user.get(
+    updateUser["phone"] = user.phone or updateUser.get("phone", None)
+    updateUser["role"] = user.role or updateUser.get("role", None)
+    updateUser["preferredClubs"] = user.preferredClubs or updateUser.get(
         "preferredClubs", None)
-    update_user["location"] = user.location or update_user.get(
+    updateUser["location"] = user.location or updateUser.get(
         "location", None)
-    update_user["mapsPlaceId"] = user.mapsPlaceId or update_user.get(
+    updateUser["mapsPlaceId"] = user.mapsPlaceId or updateUser.get(
         "mapsPlaceId", None)
-    update_user["birthDate"] = user.birthDate or update_user.get(
+    updateUser["birthDate"] = user.birthDate or updateUser.get(
         "birthDate", None)
-    update_user["userName"] = user.userName or update_user.get(
+    updateUser["userName"] = user.userName or updateUser.get(
         "userName", None)
-    update_user["birthDate"] = user.birthDate or update_user.get(
+    updateUser["birthDate"] = user.birthDate or updateUser.get(
         "birthDate", None)
-    update_user["nationality"] = user.nationality or update_user.get(
+    updateUser["nationality"] = user.nationality or updateUser.get(
         "nationality", None)
     try:
-        update_user['gender'] = getattr(
-            user.gender, 'value', None) or update_user.get("gender", None)
+        updateUser['gender'] = getattr(
+            user.gender, 'value', None) or updateUser.get("gender", None)
     except AttributeError:
-        update_user['gender'] = update_user.get("gender", None)
+        updateUser['gender'] = updateUser.get("gender", None)
 
     userRepository.update_user(user.uid, update_user)
 
@@ -204,8 +204,8 @@ def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema)
 
 def get_music_genre_preferences_by_user(uid: str):
     try:
-        user_preferences = userPreferencesRepository.find_by_user_uid(uid)
-        preferences = list(user_preferences)
+        userPreferences = userPreferencesRepository.find_by_user_uid(uid)
+        preferences = list(userPreferences)
         for preference in preferences:
             preference["_id"] = str(preference["_id"])
             for musicGenre in preference['musicGenres']:
@@ -217,50 +217,50 @@ def get_music_genre_preferences_by_user(uid: str):
 
 
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
-    update_user: UserSchema = find_user_by_id(uid)
+    updateUser: UserSchema = find_user_by_id(uid)
 
-    if (update_user == None):
+    if (updateUser == None):
         return {"message": "No user found with that uid"}
 
-    user_item = deepcopy(update_user)
+    userItem = deepcopy(updateUser)
 
-    social_media_links: List[SocialMedia] = []
+    socialMediaLinks: List[SocialMedia] = []
 
-    if 'socialMediaLinks' in dir(user_item) or user_item['socialMediaLinks'] != None:
-        social_media_links = user_item['socialMediaLinks']
+    if 'socialMediaLinks' in dir(userItem) or userItem['socialMediaLinks'] != None:
+        socialMediaLinks = userItem['socialMediaLinks']
     else:
-        user_item['socialMediaLinks'] = [
+        userItem['socialMediaLinks'] = [
             {'url_type': socialMediaItem.url_type.value, 'url': socialMediaItem.url}]
 
-    found_social_media_index: int = None
+    foundSocialMediaIndex: int = None
 
-    for i, social_media in enumerate(social_media_links):
+    for i, social_media in enumerate(socialMediaLinks):
         if (social_media['url_type'] == socialMediaItem.url_type.value):
-            found_social_media_index = i
+            foundSocialMediaIndex = i
             break
 
-    if found_social_media_index != None:
-        social_media_links[found_social_media_index] = {
+    if foundSocialMediaIndex != None:
+        socialMediaLinks[foundSocialMediaIndex] = {
             'url': socialMediaItem.url,
             'url_type': socialMediaItem.url_type.value
         }
-        user_item['socialMediaLinks'] = social_media_links
+        userItem['socialMediaLinks'] = socialMediaLinks
     else:
         socialMediaItem = vars(socialMediaItem)
         socialMediaItem['url_type'] = socialMediaItem['url_type'].value
-        social_media_links.append(socialMediaItem)
-        user_item['socialMediaLinks'] = social_media_links
+        socialMediaLinks.append(socialMediaItem)
+        userItem['socialMediaLinks'] = socialMediaLinks
 
-    userRepository.update_user(uid, user_item)
+    userRepository.update_user(uid, userItem)
 
-    return {"message": "OK", "body": user_item['socialMediaLinks']}
+    return {"message": "OK", "body": userItem['socialMediaLinks']}
 
 
 def delete_social_media_link(uid: str, socialMediaItem: SocialMedia):
     userRepository.remove_social_media_link(uid, socialMediaItem)
     user: UserSchema = find_user_by_id(uid)
-    social_media_links: List[SocialMedia] = user.get('socialMediaLinks')
-    return {"message": "OK", "body": social_media_links}
+    socialMediaLinks: List[SocialMedia] = user.get('socialMediaLinks')
+    return {"message": "OK", "body": socialMediaLinks}
 
 
 def get_public_profile(uid: str):

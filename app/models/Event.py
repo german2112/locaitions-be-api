@@ -1,20 +1,31 @@
-from pydantic import BaseModel, Field
-from typing import List
-from datetime import datetime
-from .Video import VideoSchema
-from .Comment import CommentSchema
+from pydantic import BaseModel, Field, validator
+from app.models.Location import LocationSchema
 from enum import Enum
+from app.validators import DateValidators
 
 class EventStatus(Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     SCHEDULED = "SCHEDULED"
 
+
 class EventSchema(BaseModel):
-    uid: str = Field(None)
-    name: str = Field(..., max_length=40)
-    rating: int = Field(..., le=5, ge=0)
-    date: datetime = Field(None)#TODO CHANGE TO REQUIRED
-    video: VideoSchema = Field(None)
-    comment: List[CommentSchema] = Field(None)
-    status: EventStatus = Field(None)
+
+    class Config:
+        arbitrary_types_allowed = True #Allow pydantic to validate arbitrary types
+
+    name: str
+    location: LocationSchema
+    rating: float = Field(le=5, ge=0)
+    date: str #TODO CHANGE TO DATETIME
+    status: EventStatus
+    type: str
+    description: str
+    userId: str = Field(default= "")
+    clubId: str = Field(default= "")
+    startDate: str
+    endDate: str
+    
+    @validator('startDate', 'endDate')
+    def validate_dates(cls, value):
+       return DateValidators.validate_date_in_YYYYMMDDHHmmFormat(value)

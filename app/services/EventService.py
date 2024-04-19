@@ -45,15 +45,15 @@ def build_event_filters(event: EventFiltersSchema):
     if(event.date):
         eventFilters["date"] = event.date
     if(event.clubId):
-        eventFilters["clubId"] = ObjectId(event.clubId)
+        eventFilters["clubId"] = event.clubId
     if(event.type):
         eventFilters["type"] = event.type
     if(event.userId):
         eventFilters["userId"] = event.userId
     if(event.location):
-        eventFilters["location"] = event.location
+        eventFilters["location"] = event.location.to_dict()
     if(event.status):
-        eventFilters["status"] = event.status
+        eventFilters["status"] = event.status.value
     
     return eventFilters
 

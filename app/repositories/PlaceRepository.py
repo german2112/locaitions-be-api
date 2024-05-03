@@ -1,4 +1,5 @@
 from app.config import database
+from bson import ObjectId
 
 def get(placeFilters):
     return database.db["Clubs"].aggregate([
@@ -21,3 +22,6 @@ def get(placeFilters):
             }
         }
     ])
+
+def get_by_id(id: ObjectId):
+    return database.db['Clubs'].find_one({'_id': id})

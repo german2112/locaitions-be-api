@@ -20,7 +20,7 @@ class Gender(Enum):
     MALE = "Male"
     FEMALE = "Female"
 
-class UserSchema(BaseModel):    
+class UserSchema(BaseModel):
     name: str = Field(None, max_length=40)
     email: EmailStr = Field(None)
     mapsPlaceId: str = Field(None)
@@ -37,6 +37,7 @@ class UserSchema(BaseModel):
     nationality: str = Field(None)
     preferences: UserPreferencesSchema = Field(None)
     agoraChatUser: str = Field(None)
+    agoraLiveVideoUser: int= Field(None) #TODO Change to required
     
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']

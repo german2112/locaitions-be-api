@@ -3,9 +3,13 @@ from app.models.Location import LocationSchema
 from app.models.Photo import PhotoSchema
 from enum import Enum
 from app.validators import DateValidators
+<<<<<<< HEAD
 from typing import List
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+=======
+from typing import List, Optional
+>>>>>>> 130443a (feat: added tag router)
 
 class EventStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -21,7 +25,11 @@ class EventSchema(BaseModel):
     name: str
     location: LocationSchema
     rating: float = Field(le=5, ge=0)
+<<<<<<< HEAD
     createdDate: datetime #TODO CHANGE TO DATETIME
+=======
+    createdDate: str #TODO CHANGE TO DATETIME
+>>>>>>> 130443a (feat: added tag router)
     status: EventStatus
     type: str
     description: str
@@ -29,7 +37,11 @@ class EventSchema(BaseModel):
     clubId: str = Field(default= "")
     startDate: str
     endDate: str
+<<<<<<< HEAD
     photos: List[PhotoSchema] = Field(default_factory=list)
+=======
+    tags: List[str] = Field(default=[])
+>>>>>>> 130443a (feat: added tag router)
     
     @validator('startDate', 'endDate')
     def validate_dates(cls, value):

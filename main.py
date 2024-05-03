@@ -6,6 +6,7 @@ from app.routers import PhotoRouter as photoRouter
 from app.routers import AgoraRouter as agoraRouter
 from app.routers import EventRouter as eventRouter
 from app.routers import LiveVideoRouter as liveStreamRouter
+from app.routers import TagsRouter as tagsRouter
 from fastapi_pagination import add_pagination
 from fastapi.middleware.cors import CORSMiddleware
 import firebase_admin
@@ -31,7 +32,8 @@ app.include_router(musicGenreRouter.userRouter)
 app.include_router(photoRouter.userRouter)
 app.include_router(agoraRouter.agoraRouter)
 app.include_router(liveStreamRouter.liveVideoRouter)
-app.include_router(eventRouter.eventRouter)
+app.include_router(eventRouter.eventsRouter)
+app.include_router(tagsRouter.tagsRouter)
 
 add_pagination(app)
 

@@ -16,12 +16,28 @@ from app.exceptions.BadRequestException import BadRequestException
 
 def get_events_by_filter(event: EventFiltersSchema):
     filters = build_event_filters(event)
+    event_list = []
     try:
-        eventList = EventRepository.filter_events(filters)
-        return format_list_of_events(eventList)
+        if ("tags" in filters and len(filters["tags"]) > 0):
+            event_ids = get_event_ids_from_tags(filters["tags"])
+            filters.pop("tags")
+            filters = {
+                **filters,
+                "_id": {"$in": event_ids}
+            }
+
+        event_list = EventRepository.filter_events(filters)
+        return format_list_of_events(eventList=event_list)
     except Exception as e:
         raise InternalServerError(str(e))
-    
+
+
+def get_event_ids_from_tags(tags: List[str]):
+    found_events = tagRepository.find_distinct(
+        "event_id", {"label": {"$in": tags}})
+    return [ObjectId(event_id) for event_id in found_events]
+
+
 def format_list_of_events(eventList: CursorType):
     formattedEventList = []
     for event in eventList:
@@ -37,7 +53,7 @@ def format_list_of_events(eventList: CursorType):
             "clubId": event["clubId"],
             "startDate": event["startDate"],
             "endDate": event["endDate"],
-            "createdDate": event["createdDate"] 
+            "createdDate": event["createdDate"]
         }
         formattedEventList.append(eventItem)
     return formattedEventList
@@ -46,15 +62,15 @@ def format_list_of_events(eventList: CursorType):
 def build_event_filters(event: EventFiltersSchema):
     eventFilters = {}
 
-    if(event.name):
+    if (event.name):
         eventFilters["name"] = event.name
-    if(event.date):
+    if (event.date):
         eventFilters["date"] = event.date
     if(event.clubId):
         eventFilters["clubId"] = event.clubId
     if(event.type):
         eventFilters["type"] = event.type
-    if(event.userId):
+    if (event.userId):
         eventFilters["userId"] = event.userId
     if(event.location):
         eventFilters["location"] = event.location.to_dict()
@@ -63,13 +79,19 @@ def build_event_filters(event: EventFiltersSchema):
     
     return eventFilters
 
+
 def create_event(event: EventSchema):
     if event.userId == "" and event.clubId == "":
-        raise BadRequestException("An event must have either userId or clubId but neither was given.")
+        raise BadRequestException(
+            "An event must have either userId or clubId but neither was given.")
     try:
         jsonEvent = jsonable_encoder(event)
-        jsonEvent["createdDate"] = datetime.now(UTC)
+        event_tags = jsonEvent.get("tags", [])
+        jsonEvent.pop("tags")
+        jsonEvent["createdDate"] = datetime.now(ZoneInfo('UTC'))
         createdEvent = EventRepository.insert_event(jsonEvent)
+        if len(event_tags) > 0:
+            insert_tags(event_tags, str(createdEvent.inserted_id))
     except Exception as e:
         raise InternalServerError(str(e))
     return str(createdEvent.inserted_id)
@@ -116,3 +138,14 @@ async def upload_event_photos(eventId: str, files: List[UploadFile], isProfile: 
         raise InternalServerError(f"Error while adding photos for event: {eventId}. Please try again.")
         
         
+
+def insert_tags(tags: List[str], event_id: str):
+    tags_to_be_created = []
+    for tag in tags:
+        tag_item = {
+            "label": re.sub(r'[^a-zA-Z0-9]', '', tag),
+            "event_id": event_id
+        }
+        tags_to_be_created.append(tag_item)
+
+    return tagRepository.insert_many(tags_to_be_created)

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from app.models.Event import EventStatus
 from app.models.Location import LocationSchema
+from typing import List
 
 class EventFiltersSchema(BaseModel):
 
@@ -15,3 +16,4 @@ class EventFiltersSchema(BaseModel):
     type: str = Field(default = None)
     location: LocationSchema = Field(default = None)
     status: EventStatus = Field(default = None)
+    tags: List[str] = Field(default=[])

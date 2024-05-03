@@ -4,28 +4,19 @@ from app.repositories import UserPreferencesRepository as userPreferencesReposit
 from app.models.User import UserSchema
 from app.models.UserPreferences import UserPreferencesSchema
 from app.models.User import SocialMedia
+from app.utils.ImageUtils import upload_image_to_S3
 from typing import List
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
 from datetime import datetime
-from dotenv import load_dotenv
-from app.common import constants
-import boto3
 import os
 from copy import deepcopy
 from app.entities.Filter import UserFilter
 from app.services.AgoraService import generate_app_token
 import httpx
 import uuid
-
-load_dotenv()
-
-session = boto3.Session(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-                        aws_secret_access_key=os.getenv(
-                            "AWS_SECRET_ACCESS_KEY"),
-                        region_name=os.getenv("AWS_REGION")
-                        )
-
+from app.factories.AwsFactory import create_aws_session
+from app.utils.TypeUtilities import encode_string_to_integer
 
 async def create_user(user: UserSchema):
     userExisting = validate_if_user_exist(user)
@@ -34,6 +25,7 @@ async def create_user(user: UserSchema):
     user = jsonable_encoder(user)
     agoraUser = await _generate_agora_user(user["uid"])
     user["agoraChatUser"] = agoraUser["username"]
+    user["agoraLiveVideoUser"] = encode_string_to_integer(user["uid"]) #Encode UID to integer and save it as string as mongo's limit are 8-byte integers
     userRepository.insert_user(user)
     createdUser = find_user_by_id(user["uid"])
     return createdUser
@@ -83,10 +75,10 @@ def update_user(user: UserSchema):
     except AttributeError:
         updateUser['gender'] = updateUser.get("gender", None)
 
-    userRepository.update_user(user.uid, update_user)
+    userRepository.update_user(user.uid, updateUser)
 
     # TODO Response structure must be defined in the repository
-    return {"message:": "OK", "body": update_user}
+    return {"message:": "OK", "body": updateUser}
 
 
 def validate_if_user_exist(user: UserSchema):
@@ -135,62 +127,29 @@ def find_user_by_id(uid: str):
 # TODO Simplify the method in sub-methods
 
 
-async def upload_photos(userUid: str, files: List[UploadFile], isProfile: bool):
-    bucketName = constants.AWS_BUCKET_NAME
-
+async def upload_user_photos(userUid: str, files: List[UploadFile], isProfile: bool):
     uploadedImageURL = ""
-
     uploadedImageUrls: List[str] = []
-
+    session = create_aws_session()
     for file in files:
-        if not is_image_explicit(file.file.read()):
-            # Return pointer to the beggining of the file
-            # TODO Verify ACLs configuration for prod env
-            await file.seek(0)
-            client = session.resource("s3")
-            bucket = client.Bucket(bucketName)
-            bucket.upload_fileobj(file.file, file.filename)
-            uploadedImageURL = f"https://{bucketName}.s3.amazonaws.com/{file.filename}"
-            uploadedImageUrls.append(uploadedImageURL)
-            uploadPhotoToDB = {
-                "filename": file.filename,
-                "fileUrl": uploadedImageURL,
-                "userUid": userUid,
-                "createdAt": datetime.now()
-            }
+        # Return pointer to the beggining of the file
+        # TODO Verify ACLs configuration for prod env
+        uploadedImageURL = upload_image_to_S3(session, file)
+        uploadedImageUrls.append(uploadedImageURL)
+        uploadPhotoToDB = {
+            "filename": file.filename,
+            "fileUrl": uploadedImageURL,
+            "userUid": userUid,
+            "createdAt": datetime.now()
+        }
 
-            if not isProfile or isProfile is None:
-                photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
-            else:
-                photoRepository.upload_profile_photo(
-                    jsonable_encoder({**uploadPhotoToDB, "isProfile": True}))
+        if not isProfile or isProfile is None:
+            photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
+        else:
+            photoRepository.upload_profile_photo(
+                jsonable_encoder({**uploadPhotoToDB, "isProfile": True}))
 
     return {"message:": "OK", "body": uploadedImageUrls}
-
-
-def is_image_explicit(content: bytes):
-    client = session.client('rekognition')
-
-    response = client.detect_moderation_labels(Image={'Bytes': content})
-
-    # TODO Migrate to enum class
-    explictyDefinition = {"Explicit Nudity": "Explicit Nudity",
-                          "Suggestive": "Suggestive",
-                          "Violence": "Violence",
-                          "Visual Disturbing": "Visual Disturbing",
-                          "Rude Gestures": "Rude Gestures",
-                          "Drugs": "Drugs",
-                          "Tobacco": "Tobacco",
-                          "Alcohol": "Alcohol",
-                          "Gambling": "Gambling",
-                          "Hate Symbols": "Symbols"}
-
-    for label in response['ModerationLabels']:
-        if explictyDefinition.get(label.get("ParentName")):
-            return True
-
-    return False
-
 
 def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema):
     try:
@@ -210,11 +169,9 @@ def get_music_genre_preferences_by_user(uid: str):
             preference["_id"] = str(preference["_id"])
             for musicGenre in preference['musicGenres']:
                 musicGenre["_id"] = str(musicGenre["_id"])
-
         return {"body": preferences[0] if preferences and len(preferences) > 0 else preferences}
     except:
         return {"message": "error while fetching user music genre preferences"}
-
 
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
     updateUser: UserSchema = find_user_by_id(uid)

@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 class PhotoSchema(BaseModel):
-    filename: str = Field(..., max_length=40)
-    fileUrl: str = Field(..., max_length=100)
-    userUid: str = Field(...)
-    createdAt: datetime = Field(...)
-    isProfile: bool = Field(False)
+    filename: str
+    fileUrl: str
+    createdAt: datetime
+    isProfile: bool
+
+    def to_dict(self):
+        return self.__dict__

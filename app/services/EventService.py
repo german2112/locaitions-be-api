@@ -1,12 +1,18 @@
 from app.models.EventFilters import EventFiltersSchema
 from app.models.Event import EventSchema
 from app.repositories import EventRepository
-from bson.objectid import ObjectId
+from app.utils.ImageUtils import upload_image_to_S3
 from datetime import datetime, UTC
 from fastapi.encoders import jsonable_encoder
 from app.exceptions.BadRequestException import BadRequestException
 from app.exceptions.InternalServerError import InternalServerError
 from pymongo import CursorType
+from typing import List
+from fastapi import UploadFile
+from app.factories.AwsFactory import create_aws_session
+from app.models.Photo import PhotoSchema
+from bson import ObjectId
+from app.exceptions.BadRequestException import BadRequestException
 
 def get_events_by_filter(event: EventFiltersSchema):
     filters = build_event_filters(event)
@@ -67,3 +73,46 @@ def create_event(event: EventSchema):
     except Exception as e:
         raise InternalServerError(str(e))
     return str(createdEvent.inserted_id)
+
+async def get_formatted_photos(files: List[UploadFile], isProfile: bool):
+    try:
+        session = create_aws_session()
+        photoUrl = ''
+        formattedPhotosList: List[dict] = []
+        for file in files:
+            photoUrl = await upload_image_to_S3(session, file)
+            photo = PhotoSchema(filename=file.filename, 
+                                fileUrl=photoUrl, 
+                                createdAt=datetime.now(UTC), 
+                                isProfile=isProfile)
+            formattedPhotosList.append(photo.to_dict())
+        return formattedPhotosList
+    except Exception as e:
+        raise InternalServerError(f"Error formatting new event photos. Error: {str(e)}")
+
+async def upload_event_photos(eventId: str, files: List[UploadFile], isProfile: bool):
+    eventToUpdate = EventRepository.get_by_id(ObjectId(eventId))
+    if not eventToUpdate:
+        raise BadRequestException("No event found with the given eventId")
+    formattedPhotosList = await get_formatted_photos(files, isProfile)
+    resultantEvent = EventSchema(
+            _id=eventToUpdate["_id"],
+            name=eventToUpdate["name"],
+            location=eventToUpdate["location"],
+            rating=eventToUpdate["rating"],
+            createdDate=eventToUpdate["createdDate"],
+            status=eventToUpdate["status"],
+            type=eventToUpdate["type"],
+            description=eventToUpdate["description"],
+            userId=eventToUpdate["userId"],
+            clubId=eventToUpdate["clubId"],
+            startDate=eventToUpdate["startDate"],
+            endDate=eventToUpdate["endDate"],
+            photos=eventToUpdate["photos"]+formattedPhotosList).to_dict()
+    updatedEvent = EventRepository.update_event(ObjectId(eventId), formattedPhotosList)
+    if updatedEvent.matched_count > 0:
+        return resultantEvent
+    else:
+        raise InternalServerError(f"Error while adding photos for event: {eventId}. Please try again.")
+        
+        

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from dotenv import load_dotenv
-from agora_token_builder import RtcTokenBuilder
+from app.lib.AgoraDynamicKey.python3.src.RtcTokenBuilder2 import RtcTokenBuilder
 from app.lib.AgoraDynamicKey.python3.src.ChatTokenBuilder2 import ChatTokenBuilder
 from app.lib.AgoraDynamicKey.python3.src.AccessToken2 import AccessToken, ServiceChat
 import os
@@ -8,17 +8,18 @@ import time
 
 load_dotenv()
 
-def generate_rtc_token(channel_name: str, user_uid: str):
-    app_id = os.getenv("AGORA_APP_ID")
-    primary_certificate = os.getenv("AGORA_PRIMARY_CERITIFICATE")
-    expiration_time_in_seconds = 3600
-    current_time = int(time.time())
-    privilege_expiration = current_time + expiration_time_in_seconds
-    role = 1
+def generate_rtc_token(channelName: str, agoraLiveVideoUser: int, role: int):
+    appId = os.getenv("AGORA_APP_ID")
+    primaryCertificate = os.getenv("AGORA_PRIMARY_CERITIFICATE")
+    expirationTimeInSeconds = 3600
+    currentTime = int(time.time())
+    privilegeExpiration = currentTime + expirationTimeInSeconds
     try:
-        token = RtcTokenBuilder.buildTokenWithUid(appId=app_id, appCertificate=primary_certificate,
-                                                  channelName=channel_name, uid=user_uid, role=role, privilegeExpiredTs=privilege_expiration)
-        return {"message": "success", "body": token}
+        token = RtcTokenBuilder.build_token_with_uid(app_id=appId, app_certificate=primaryCertificate,
+                                                  channel_name=channelName, uid=agoraLiveVideoUser, role=role, token_expire= 600, privilege_expire=privilegeExpiration)
+        return {
+            'token': token
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

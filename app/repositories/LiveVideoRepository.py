@@ -1,4 +1,5 @@
 from app.config import database
+from app.models.LiveStreamVideo import LiveStreamVideoSchema
 
 def validate_if_user_in_area(userCoordinates, eventId):
     database.db["Events"].create_index([("area", "2dsphere")])
@@ -20,3 +21,12 @@ def get_event_owner_stream(eventId: str, eventCreatedBy: str):
         "eventId": eventId,
         "createdBy": eventCreatedBy
     })
+
+def insert_live_stream_video(createLiveStreamData: LiveStreamVideoSchema):
+    filterCriteria = {'_createdBy': createLiveStreamData.createdBy}
+    updateCriteria = {'$set': {
+                        'eventId': createLiveStreamData.eventId,
+                        'createdAt': createLiveStreamData.createdAt,
+                        'channelId': createLiveStreamData.channelId
+                    }}
+    return database.db["LiveStreamVideos"].update_one(filter=filterCriteria, update=updateCriteria, upsert=True)

@@ -11,6 +11,7 @@ from typing import Annotated
 from fastapi import UploadFile, Form
 from typing import List
 from app.entities.Filter import UserFilter
+from app.utils.ResponseUtils import get_unsuccessful_response
 from app.common.token_verification import verify_firebase_token
 
 userRouter = APIRouter(prefix="/user")
@@ -18,12 +19,15 @@ userRouter = APIRouter(prefix="/user")
 
 @userRouter.post("/create", response_description="Create new user", response_model=UserSchema, tags=["Users"])
 async def create(user: UserSchema = Body(...), decoded_token: dict = Depends(verify_firebase_token)):
-    response = typeUtilities.parse_json(await userService.create_user(user))
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
+    try:
+        response = typeUtilities.parse_json(await userService.create_user(user))
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)
+    except Exception as e:
+        return JSONResponse(content=get_unsuccessful_response(e))
 
 
 @userRouter.put("/update", response_description="Update user", response_model=UserSchema, tags=["Users"])
-def update(user: UserSchema, decoded_token: dict = Depends(verify_firebase_token)):
+def update(user: UserSchema):
     response = typeUtilities.parse_json(userService.update_user(user))
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
@@ -50,7 +54,7 @@ def find_by_user(uid: str, decoded_token: dict = Depends(verify_firebase_token))
 
 @userRouter.post("/upload-photo", response_description="Upload user photo", response_model=PhotoSchema, tags=["Users"])
 async def upload_photo(files: Annotated[List[UploadFile], Form()], uid: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False, decoded_token: dict = Depends(verify_firebase_token)):
-    response = await userService.upload_photos(uid, files, isProfile)
+    response = await userService.upload_user_photos(uid, files, isProfile)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 

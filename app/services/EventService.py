@@ -2,7 +2,7 @@ from app.models.EventFilters import EventFiltersSchema
 from app.models.Event import EventSchema
 from app.repositories import EventRepository
 from app.utils.ImageUtils import upload_image_to_S3
-from datetime import datetime, UTC
+from datetime import datetime
 from fastapi.encoders import jsonable_encoder
 from app.exceptions.BadRequestException import BadRequestException
 from app.exceptions.InternalServerError import InternalServerError
@@ -13,6 +13,9 @@ from app.factories.AwsFactory import create_aws_session
 from app.models.Photo import PhotoSchema
 from bson import ObjectId
 from app.exceptions.BadRequestException import BadRequestException
+import re
+from app.repositories import TagRepository as tagRepository
+from zoneinfo import ZoneInfo
 
 def get_events_by_filter(event: EventFiltersSchema):
     filters = build_event_filters(event)

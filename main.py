@@ -32,7 +32,7 @@ app.include_router(musicGenreRouter.userRouter)
 app.include_router(photoRouter.userRouter)
 app.include_router(agoraRouter.agoraRouter)
 app.include_router(liveStreamRouter.liveVideoRouter)
-app.include_router(eventRouter.eventsRouter)
+app.include_router(eventRouter.eventRouter)
 app.include_router(tagsRouter.tagsRouter)
 
 add_pagination(app)

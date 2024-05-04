@@ -11,6 +11,7 @@ from fastapi import UploadFile, Form
 
 eventRouter = APIRouter(prefix="/events")
 
+
 @eventRouter.post("/filter-event")
 def find_by_filter(eventFilters: EventFiltersSchema, decoded_token: dict = Depends(verify_firebase_token)):
     try:
@@ -18,14 +19,17 @@ def find_by_filter(eventFilters: EventFiltersSchema, decoded_token: dict = Depen
         return JSONResponse(status_code=status.HTTP_200_OK, content=get_successful_response(jsonable_encoder(filteredEventList)))
     except Exception as e:
         return JSONResponse(content=get_unsuccessful_response(e))
+
+
 @eventRouter.post("/create")
 def create(event: EventSchema):
     try:
         response = eventService.create_event(event)
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=get_successful_response(response))
     except Exception as e:
-        return JSONResponse(content= get_unsuccessful_response(e))
-    
+        return JSONResponse(content=get_unsuccessful_response(e))
+
+
 @eventRouter.post("/upload-photo")
 async def upload_photo(files: Annotated[List[UploadFile], Form()], eventId: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False):
     try:
@@ -33,5 +37,3 @@ async def upload_photo(files: Annotated[List[UploadFile], Form()], eventId: Anno
         return JSONResponse(status_code=200, content=get_successful_response(response))
     except Exception as e:
         return JSONResponse(content=get_unsuccessful_response(e))
-    
-    

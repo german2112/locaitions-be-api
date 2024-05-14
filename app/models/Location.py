@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from enum import Enum
 from fastapi.encoders import jsonable_encoder
+from typing import Optional
 
 class Coordinates(BaseModel):
         class CoordinatesType(Enum):
@@ -16,7 +17,7 @@ class LocationSchema(BaseModel):
         arbitrary_types_allowed = True #Allow pydantic to validate arbitrary types
     
     mainCoordinates: Coordinates
-    area: Coordinates = Field(default_factory=dict)
+    area: Optional[Coordinates] = Field(default_factory=dict)
     name: str
     address: str
 

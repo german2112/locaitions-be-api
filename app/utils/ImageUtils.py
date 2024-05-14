@@ -1,6 +1,8 @@
 from fastapi import UploadFile
 from app.common import constants
 from app.exceptions.InternalServerError import InternalServerError
+import os
+
 
 def is_image_explicit(content: bytes, session):
     client = session.client('rekognition')
@@ -25,12 +27,15 @@ def is_image_explicit(content: bytes, session):
 
     return False
 
+
 async def upload_image_to_S3(session, file: UploadFile):
     if not is_image_explicit(file.file.read(), session):
         await file.seek(0)
         client = session.resource("s3")
         bucket = client.Bucket(constants.AWS_BUCKET_NAME)
-        bucket.upload_fileobj(file.file, file.filename)
-        return f"https://{constants.AWS_BUCKET_NAME}.s3.amazonaws.com/{file.filename}"
+        formatted_name = os.path.basename(file.filename)
+        bucket.upload_fileobj(file.file, formatted_name)
+        return f"https://{constants.AWS_BUCKET_NAME}.s3.amazonaws.com/{formatted_name}"
     else:
-        raise InternalServerError(f"File: {file.filename} cannot be uploaded to S3 as it contains explicit content.")
+        raise InternalServerError(
+            f"File: {formatted_name} cannot be uploaded to S3 as it contains explicit content.")

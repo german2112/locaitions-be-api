@@ -22,7 +22,7 @@ def find_by_filter(eventFilters: EventFiltersSchema, decoded_token: dict = Depen
 
 
 @eventRouter.post("/create")
-def create(event: EventSchema):
+def create(event: EventSchema,  decoded_token: dict = Depends(verify_firebase_token)):
     try:
         response = eventService.create_event(event)
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=get_successful_response(response))
@@ -31,9 +31,18 @@ def create(event: EventSchema):
 
 
 @eventRouter.post("/upload-photo")
-async def upload_photo(files: Annotated[List[UploadFile], Form()], eventId: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False):
+async def upload_photo(files: Annotated[List[UploadFile], Form()], eventId: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False,  decoded_token: dict = Depends(verify_firebase_token)):
     try:
         response = await eventService.upload_event_photos(eventId, files, isProfile)
+        return JSONResponse(status_code=200, content=get_successful_response(response))
+    except Exception as e:
+        return JSONResponse(content=get_unsuccessful_response(e))
+
+
+@eventRouter.get("/{event_id}")
+def find_by_id(event_id: str):
+    try:
+        response = eventService.find_by_id(event_id=event_id)
         return JSONResponse(status_code=200, content=get_successful_response(response))
     except Exception as e:
         return JSONResponse(content=get_unsuccessful_response(e))

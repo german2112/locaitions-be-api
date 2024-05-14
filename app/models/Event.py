@@ -6,6 +6,8 @@ from app.validators import DateValidators
 from typing import List
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+from typing import Optional
+
 
 class EventStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -21,16 +23,17 @@ class EventSchema(BaseModel):
     name: str
     location: LocationSchema
     rating: float = Field(le=5, ge=0)
-    createdDate: datetime #TODO CHANGE TO DATETIME
+    createdDate: Optional[datetime] #TODO CHANGE TO DATETIME
     status: EventStatus
     type: str
-    description: str
+    description: Optional[str]
     userId: str = Field(default= "")
     clubId: str = Field(default= "")
     startDate: str
     endDate: str
     photos: List[PhotoSchema] = Field(default_factory=list)
     tags: List[str] = Field(default=[])
+    capacity: int
     
     @validator('startDate', 'endDate')
     def validate_dates(cls, value):

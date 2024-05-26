@@ -4,19 +4,19 @@ from app.repositories import UserPreferencesRepository as userPreferencesReposit
 from app.models.User import UserSchema
 from app.models.UserPreferences import UserPreferencesSchema
 from app.models.User import SocialMedia
-from app.utils.ImageUtils import upload_image_to_S3
 from typing import List
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
-from datetime import datetime
+from datetime import datetime, UTC
 import os
 from copy import deepcopy
 from app.entities.Filter import UserFilter
 from app.services.AgoraService import generate_app_token
 import httpx
 import uuid
-from app.factories.AwsFactory import create_aws_session
 from app.utils.TypeUtilities import encode_string_to_integer
+from app.exceptions.BadRequestException import BadRequestException
+from app.helpers.PhotoHelper import format_photos_to_insert
 
 async def create_user(user: UserSchema):
     userExisting = validate_if_user_exist(user)
@@ -26,6 +26,7 @@ async def create_user(user: UserSchema):
     agoraUser = await _generate_agora_user(user["uid"])
     user["agoraChatUser"] = agoraUser["username"]
     user["agoraLiveVideoUser"] = encode_string_to_integer(user["uid"]) #Encode UID to integer and save it as string as mongo's limit are 8-byte integers
+    user["profilePicture"] = None
     userRepository.insert_user(user)
     createdUser = find_user_by_id(user["uid"])
     return createdUser
@@ -130,28 +131,17 @@ def find_user_by_id(uid: str):
 
 
 async def upload_user_photos(userUid: str, files: List[UploadFile], isProfile: bool):
-    uploadedImageURL = ""
-    uploadedImageUrls: List[str] = []
-    session = create_aws_session()
-    for file in files:
-        # Return pointer to the beggining of the file
-        # TODO Verify ACLs configuration for prod env
-        uploadedImageURL = upload_image_to_S3(session, file)
-        uploadedImageUrls.append(uploadedImageURL)
-        uploadPhotoToDB = {
-            "filename": file.filename,
-            "fileUrl": uploadedImageURL,
-            "userUid": userUid,
-            "createdAt": datetime.now()
-        }
+    userToUpdate = userRepository.find_by_id(userUid)
+    if not userToUpdate:
+        raise BadRequestException("No user found with the given uid")
+    formattedPhotosList = await format_photos_to_insert(files, isProfile)
 
-        if not isProfile or isProfile is None:
-            photoRepository.upload_photo(jsonable_encoder(uploadPhotoToDB))
-        else:
-            photoRepository.upload_profile_photo(
-                jsonable_encoder({**uploadPhotoToDB, "isProfile": True}))
+    if not isProfile or isProfile is None:
+        userRepository.update_user_photos(userUid, formattedPhotosList)
+    else:
+        userRepository.update_profile_picture(userUid, formattedPhotosList[0])
 
-    return {"message:": "OK", "body": uploadedImageUrls}
+    return {"message:": "OK", "body": jsonable_encoder(formattedPhotosList)}
 
 def insert_music_genre_preferences(musicGenrePreferences: UserPreferencesSchema):
     try:
@@ -245,3 +235,19 @@ def insert_filter_preference(uid: str, filter: UserFilter):
     updatedPeferences = userPreferencesRepository.insert_filter_preference(
         uid, filter)
     return {"message": "OK", "body": updatedPeferences}
+
+def get_user_photos(uid: str):
+    user = userRepository.find_by_id(uid)
+    userPhotos = list(user['photos'])
+    return {"message": "ok", "body": userPhotos}
+
+def delete_user_photo(userUid: str, photoId: str):
+    """ bucketName = constants.AWS_BUCKET_NAME
+    client = session.resource("s3")
+    bucket = client.Bucket(bucketName)
+    
+    bucket.delete_objects() """
+
+    userRepository.delete_user_photo_by_id(userUid, photoId)
+    return {"message": "ok"}
+    

@@ -14,7 +14,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from app.repositories import PlaceRepository as placeRepository
 
-
 def get_event_ids_from_tags(tags: List[str]):
     found_events = tagRepository.find_distinct(
         "event_id", {"label": {"$in": tags}})
@@ -34,6 +33,7 @@ def format_list_of_events(eventList: CursorType):
         eventItem = {
             "_id": event_id,
             "name": event["name"],
+            "location": event["location"],
             "status": event["status"],
             "type": event["type"],
             "description": event["description"],

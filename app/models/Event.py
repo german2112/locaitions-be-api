@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, Extra
 from app.models.Location import LocationSchema
 from app.models.Photo import PhotoSchema
 from enum import Enum
@@ -6,8 +6,6 @@ from app.validators import DateValidators
 from typing import List, Optional
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from typing import Optional
-
 
 class EventStatus(Enum):
     ACTIVE = "ACTIVE"
@@ -18,19 +16,21 @@ class EventStatus(Enum):
 class EventSchema(BaseModel):
 
     class Config:
-        arbitrary_types_allowed = True  # Allow pydantic to validate arbitrary types
+        arbitrary_types_allowed = True #Allow pydantic to validate arbitrary types
+        extra = Extra.forbid
     _id: str = Field(default=None)
     name: str
     location: LocationSchema
     rating: float = Field(le=5, ge=0)
-    createdDate: Optional[datetime]  # TODO CHANGE TO DATETIME
+    createdDate: datetime #TODO CHANGE TO DATETIME
     status: EventStatus
     type: str
-    description: Optional[str]
-    userId: str = Field(default="")
-    clubId: str = Field(default="")
+    description: str
+    userId: str = Field(default= "")
+    clubId: str = Field(default= "")
     startDate: str
     endDate: str
+    tags: str
     photos: List[PhotoSchema] = Field(default_factory=list)
     tags: List[str] = Field(default=[])
     capacity: int

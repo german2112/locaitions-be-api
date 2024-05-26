@@ -27,6 +27,7 @@ def insert_live_stream_video(createLiveStreamData: LiveStreamVideoSchema):
     updateCriteria = {'$set': {
                         'eventId': createLiveStreamData.eventId,
                         'createdAt': createLiveStreamData.createdAt,
-                        'channelId': createLiveStreamData.channelId
+                        'channelId': createLiveStreamData.channelId,
+                        'photoUrl': createLiveStreamData.photoUrl
                     }}
     return database.db["LiveStreamVideos"].update_one(filter=filterCriteria, update=updateCriteria, upsert=True)

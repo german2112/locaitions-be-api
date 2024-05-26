@@ -59,7 +59,7 @@ def format_places_list(user: UserSchema,placesList, placeAttributesToFilter: Pla
 
     for place in placesList:
         validatedDistanceBetweenPlaceAndUser = validate_if_place_inside_user_range(user, placeAttributesToFilter, place["location"]["mainCoordinates"]["coordinates"])
-        if validatedDistanceBetweenPlaceAndUser >= 0:
+        if 1 == 1: #TODO Rollback to distance comparisson logic
             
             photo = build_photo_object_of_place(place)
             

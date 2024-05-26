@@ -2,7 +2,6 @@ import fastapi
 from app.routers import UserRouter as userRouter
 from app.routers import PlaceRouter as placerRouter
 from app.routers import MusicGenreRouter as musicGenreRouter
-from app.routers import PhotoRouter as photoRouter
 from app.routers import AgoraRouter as agoraRouter
 from app.routers import EventRouter as eventRouter
 from app.routers import LiveVideoRouter as liveStreamRouter
@@ -29,7 +28,6 @@ app.add_middleware(
 app.include_router(userRouter.userRouter)
 app.include_router(placerRouter.placeRouter)
 app.include_router(musicGenreRouter.userRouter)
-app.include_router(photoRouter.userRouter)
 app.include_router(agoraRouter.agoraRouter)
 app.include_router(liveStreamRouter.liveVideoRouter)
 app.include_router(eventRouter.eventRouter)

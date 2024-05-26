@@ -9,8 +9,7 @@ from app.repositories.PlaceRepository import get_by_id
 import app.repositories.EventRepository as EventRepository
 from app.dto.CreateLiveStreamDTO import CreateLiveStreamDTO
 from bson.objectid import ObjectId
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, UTC
 
 def validate_if_user_in_area(user: UserSchema, event: EventSchema):
     userCoordinates = (user.location["lng"], user.location["lat"])
@@ -45,7 +44,7 @@ def get_event_owner_stream(eventId: str, eventCreatedBy: str):
     
 def create_live_stream(liveStreamData: CreateLiveStreamDTO):
     try:
-        createdLiveStream = LiveStreamVideoSchema(createdBy=liveStreamData.createdBy, eventId=liveStreamData.eventId, channelId=liveStreamData.username, createdAt=datetime.now(ZoneInfo('UTC')))
+        createdLiveStream = LiveStreamVideoSchema(createdBy=liveStreamData.createdBy, eventId=liveStreamData.eventId, channelId=liveStreamData.username, createdAt=str(datetime.now(UTC)), photoUrl=liveStreamData.photoUrl)
         LiveVideoRepository.insert_live_stream_video(createdLiveStream)
         return createdLiveStream.to_dict()
     except Exception as e:

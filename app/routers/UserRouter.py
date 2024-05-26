@@ -53,7 +53,7 @@ def find_by_user(uid: str, decoded_token: dict = Depends(verify_firebase_token))
 
 
 @userRouter.post("/upload-photo", response_description="Upload user photo", response_model=PhotoSchema, tags=["Users"])
-async def upload_photo(files: Annotated[List[UploadFile], Form()], uid: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False, decoded_token: dict = Depends(verify_firebase_token)):
+async def upload_photo(files: Annotated[List[UploadFile], Form()], uid: Annotated[str, Form()], isProfile: Annotated[bool, Form()] = False):
     response = await userService.upload_user_photos(uid, files, isProfile)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
@@ -84,3 +84,13 @@ def delete_social_media_link(uid: str, socialMediaItem: SocialMedia = Body(...),
     response = typeUtilities.parse_json(
         userService.delete_social_media_link(uid, socialMediaItem))
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.get("/photos/{uid}", response_description="Find user photos", response_model=List[PhotoSchema], tags=["Users", "Photos"])
+def get_photos(uid: str, decoded_token: dict = Depends(verify_firebase_token)):
+  response = typeUtilities.parse_json(userService.get_user_photos(uid))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@userRouter.delete("/photos/{id}", response_description="Delete a user photo", response_model=bool, tags=['Photos', 'Deletion'])
+def delete_photos(id: str, decoded_token: dict = Depends(verify_firebase_token)):
+  response = typeUtilities.parse_json(userService.delete_user_photo(decoded_token.get('uid'), id))
+  return JSONResponse(status_code=status.HTTP_200_OK, content=response)

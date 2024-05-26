@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from datetime import datetime
 from pydantic import Field
 
 class LiveStreamVideoSchema(BaseModel):
@@ -7,7 +6,8 @@ class LiveStreamVideoSchema(BaseModel):
     createdBy: str
     eventId: str
     channelId: str
-    createdAt: datetime
+    createdAt: str
+    photoUrl: str
 
     def to_dict(self):
         liveStreamVideoDict = self.dict(exclude_unset=True)

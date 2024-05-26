@@ -1,10 +1,11 @@
 from pydantic import BaseModel
-from datetime import datetime
+
 class PhotoSchema(BaseModel):
+    id: str
     filename: str
     fileUrl: str
-    createdAt: datetime
+    createdAt: str
     isProfile: bool
 
     def to_dict(self):
-        return self.__dict__
+        return self.dict()

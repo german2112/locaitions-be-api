@@ -7,6 +7,7 @@ from app.routers import AgoraRouter as agoraRouter
 from app.routers import EventRouter as eventRouter
 from app.routers import LiveVideoRouter as liveStreamRouter
 from app.routers import TagsRouter as tagsRouter
+from app.routers import FavoriteEventRouter as favoriteEventRouter
 from fastapi_pagination import add_pagination
 from fastapi.middleware.cors import CORSMiddleware
 import firebase_admin
@@ -34,6 +35,7 @@ app.include_router(agoraRouter.agoraRouter)
 app.include_router(liveStreamRouter.liveVideoRouter)
 app.include_router(eventRouter.eventRouter)
 app.include_router(tagsRouter.tagsRouter)
+app.include_router(favoriteEventRouter.favoriteEventRouter)
 
 add_pagination(app)
 

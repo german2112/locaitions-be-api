@@ -10,7 +10,7 @@ class EventFiltersSchema(BaseModel):
 
     uid: str = Field(default = None)
     name: str = Field(default = None)
-    date: str = Field(default = None)
+    startDate: str = Field(default = None)
     clubId: str = Field(default = None)
     userId: str = Field(default = None)
     type: str = Field(default = None)

@@ -32,7 +32,7 @@ def format_list_of_events(eventList: CursorType):
         event_id = str(event["_id"])
         event_tags = get_labels_from_event_id(eventId=event_id)
         eventItem = {
-            "id": event_id,
+            "_id": event_id,
             "name": event["name"],
             "status": event["status"],
             "type": event["type"],
@@ -41,10 +41,10 @@ def format_list_of_events(eventList: CursorType):
             "clubId": event["clubId"],
             "startDate": event["startDate"],
             "endDate": event["endDate"],
-            "createdDate": event["createdDate"],
+            "createdDate": str(event["createdDate"]),
             "tags": event_tags,
             "capacity": event["capacity"] if "capacity" in event else 0,
-            "photos": event["photos"] if "photos" in event else []
+            "photos": format_event_photos(event["photos"]) if "photos" in event else []
         }
         formattedEventList.append(eventItem)
     return formattedEventList
@@ -54,9 +54,14 @@ def build_event_filters(event: EventFiltersSchema):
     eventFilters = {}
 
     if (event.name):
-        eventFilters["name"] = event.name
-    if (event.date):
-        eventFilters["date"] = event.date
+        eventFilters["name"] = {
+            '$regex': event.name,
+            '$options': 'i'
+        }
+    if (event.startDate):
+        incoming_date = datetime.strptime(event.startDate, "%d/%m/%Y")
+        formatted_date = incoming_date.strftime("%Y-%m-%d %H:%M")
+        eventFilters["startDate"] = {"$gte": formatted_date}
     if (event.clubId):
         eventFilters["clubId"] = event.clubId
     if (event.type):
@@ -67,6 +72,8 @@ def build_event_filters(event: EventFiltersSchema):
         eventFilters["location"] = event.location.to_dict()
     if (event.status):
         eventFilters["status"] = event.status.value
+    if (event.tags):
+        eventFilters["tags"] = event.tags
 
     return eventFilters
 
@@ -103,9 +110,10 @@ async def get_formatted_photos(files: List[UploadFile], isProfile: bool):
 
 def get_event_place(placeId: str):
     found_place = placeRepository.get_by_id(ObjectId(placeId))
-    if(found_place != None):
+    if (found_place != None):
         found_place = {**found_place, "_id": str(found_place["_id"])}
     return found_place
+
 
 def format_event_photos(photos) -> List:
     formatted_photos = []

@@ -13,7 +13,7 @@ placeRouter = APIRouter(prefix="/place")
 @placeRouter.post("", 
                   response_description="Get list of places"
                   )
-def find_all(user: UserSchema, place: PlaceSchema, params: Params, decoded_token: dict = Depends(verify_firebase_token)):
+def find_all(user: UserSchema, place: PlaceSchema, params: Params):
     response = TypeUtilities.parse_json(placeService.get_list_of_places(user, place))
     return paginate(response, params)
 

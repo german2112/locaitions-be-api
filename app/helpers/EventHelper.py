@@ -41,10 +41,10 @@ def format_list_of_events(eventList: CursorType):
             "clubId": event["clubId"],
             "startDate": event["startDate"],
             "endDate": event["endDate"],
-            "createdDate": event["createdDate"],
+            "createdDate": str(event["createdDate"]),
             "tags": event_tags,
             "capacity": event["capacity"] if "capacity" in event else 0,
-            "photos": event["photos"] if "photos" in event else []
+            "photos": format_event_photos(event["photos"]) if "photos" in event else []
         }
         formattedEventList.append(eventItem)
     return formattedEventList

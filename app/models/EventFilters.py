@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from app.models.Event import EventStatus
 from app.models.Location import LocationSchema
-from typing import List
+from typing import List, Optional
 
 class EventFiltersSchema(BaseModel):
 

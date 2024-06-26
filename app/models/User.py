@@ -5,20 +5,31 @@ from .Role import RoleSchema
 from .Place import PlaceSchema
 from enum import Enum
 from app.models.UserPreferences import UserPreferencesSchema
+from typing import Optional
+
 
 class SocialMediaTypes(Enum):
     FACEBOOK = "Facebook"
     INSTAGRAM = "Instagram"
     YOUTUBE = "Youtube"
     TIKTOK = "TikTok"
-    
+
+
 class SocialMedia(BaseModel):
     url_type: SocialMediaTypes
     url: str
-    
+
+
 class Gender(Enum):
     MALE = "Male"
     FEMALE = "Female"
+
+
+class Role(Enum):
+    BASIC = "BASIC"
+    VERIFIED = "VERIFIED"
+    LOACCOUNT = "LOACCOUNT"
+
 
 class UserSchema(BaseModel):
     name: str = Field(None, max_length=40)
@@ -28,7 +39,7 @@ class UserSchema(BaseModel):
     birthDate: str = Field(None)
     membership: MembershipSchema = Field(None)
     phone: str = Field(None)
-    role: RoleSchema = Field(None)
+    role: Optional[Role] = Field(default=Role.BASIC)
     preferredClubs: List[PlaceSchema] = Field(None)
     uid: str = Field(None)
     userName: str = Field(None, max_length=15)
@@ -37,14 +48,14 @@ class UserSchema(BaseModel):
     nationality: str = Field(None)
     preferences: UserPreferencesSchema = Field(None)
     agoraChatUser: str = Field(None)
-    agoraLiveVideoUser: int= Field(None) #TODO Change to required
-    
+    agoraLiveVideoUser: int = Field(None)  # TODO Change to required
+
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']
 
         # Create a new dictionary with only desired fields
         # This is also added so that we can use this object as a dict without the serialized functions
-        filtered_data = {key: getattr(self, key) for key in dir(self) if key not in exclude_keys and not callable(getattr(self, key))}
+        filtered_data = {key: getattr(self, key) for key in dir(
+            self) if key not in exclude_keys and not callable(getattr(self, key))}
 
         return filtered_data
-    

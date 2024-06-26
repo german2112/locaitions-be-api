@@ -69,6 +69,8 @@ def update_user(user: UserSchema):
         "birthDate", None)
     updateUser["nationality"] = user.nationality or updateUser.get(
         "nationality", None)
+    updateUser["role"] = user.role.value or updateUser.get(
+        "role", None)
     try:
         updateUser['gender'] = getattr(
             user.gender, 'value', None) or updateUser.get("gender", None)

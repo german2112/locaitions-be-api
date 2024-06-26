@@ -9,7 +9,7 @@ class PlaceDTO:
 
 
     def __init__(self, id, name, location, distance, placePhotos, description):
-        self.id = id,
+        self.id = id
         self.name = name
         self.location = location
         self.distance = distance

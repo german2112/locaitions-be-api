@@ -44,7 +44,8 @@ def format_list_of_events(eventList: CursorType):
             "createdDate": str(event["createdDate"]),
             "tags": event_tags,
             "capacity": event["capacity"] if "capacity" in event else 0,
-            "photos": format_event_photos(event["photos"]) if "photos" in event else []
+            "photos": format_event_photos(event["photos"]) if "photos" in event else [],
+            "chatroomId": event["chatroomId"]
         }
         formattedEventList.append(eventItem)
     return formattedEventList

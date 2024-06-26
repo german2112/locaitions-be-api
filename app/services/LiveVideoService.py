@@ -7,7 +7,7 @@ from app.exceptions.BadRequestException import BadRequestException
 from app.models.LiveStreamVideo import LiveStreamVideoSchema
 from app.repositories.PlaceRepository import get_by_id
 import app.repositories.EventRepository as EventRepository
-from app.dto.CreateLiveStreamDTO import CreateLiveStreamDTO
+from app.dto.CreateLiveSpaceDTO import CreateLiveSpaceDTO
 from bson.objectid import ObjectId
 from datetime import datetime, UTC
 
@@ -42,7 +42,7 @@ def get_event_owner_stream(eventId: str, eventCreatedBy: str):
     except Exception as e:
         raise InternalServerError(f'Error while retrieving live stream of owner: {eventCreatedBy} for event {event._id}. Error: {e}')
     
-def create_live_stream(liveStreamData: CreateLiveStreamDTO):
+def create_live_stream(liveStreamData: CreateLiveSpaceDTO):
     try:
         createdLiveStream = LiveStreamVideoSchema(createdBy=liveStreamData.createdBy, eventId=liveStreamData.eventId, channelId=liveStreamData.username, createdAt=str(datetime.now(UTC)), photoUrl=liveStreamData.photoUrl)
         LiveVideoRepository.insert_live_stream_video(createdLiveStream)

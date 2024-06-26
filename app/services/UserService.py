@@ -11,7 +11,7 @@ from datetime import datetime, UTC
 import os
 from copy import deepcopy
 from app.entities.Filter import UserFilter
-from app.services.AgoraService import generate_app_token
+from app.helpers.AgoraHelper import generate_app_token
 import httpx
 import uuid
 from app.utils.TypeUtilities import encode_string_to_integer

@@ -18,7 +18,7 @@ userRouter = APIRouter(prefix="/user")
 
 
 @userRouter.post("/create", response_description="Create new user", response_model=UserSchema, tags=["Users"])
-async def create(user: UserSchema = Body(...), decoded_token: dict = Depends(verify_firebase_token)):
+async def create(user: UserSchema = Body(...)):
     try:
         response = typeUtilities.parse_json(await userService.create_user(user))
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=response)

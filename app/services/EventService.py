@@ -1,5 +1,6 @@
-from app.models.EventFilters import EventFiltersSchema
-from app.models.Event import EventSchema
+from app.schemas.EventFilter import EventFilter
+from app.schemas.CreateEvent import CreateEvent
+from app.factories.EventFactory import EventFactory
 from app.repositories import EventRepository
 from datetime import datetime, UTC
 from fastapi.encoders import jsonable_encoder
@@ -10,86 +11,61 @@ from fastapi import UploadFile
 from bson import ObjectId
 from app.exceptions.BadRequestException import BadRequestException
 from app.helpers.PhotoHelper import format_photos_to_insert
-from app.helpers.EventHelper import get_event_ids_from_tags, build_event_filters, get_labels_from_event_id, get_event_place, format_event_photos, format_list_of_events, insert_tags
+from app.helpers.EventHelper import build_event_filters, get_labels_from_event_id, get_event_place, format_event_photos, format_list_of_events, insert_tags
 
-def get_events_by_filter(event: EventFiltersSchema):
+def get_events_by_filter(event: EventFilter):
     filters = build_event_filters(event)
-    event_list = []
+    eventList = []
     try:
-        if ("tags" in filters and len(filters["tags"]) > 0):
-            event_ids = get_event_ids_from_tags(filters["tags"])
-            filters.pop("tags")
-            filters = {
-                **filters,
-                "_id": {"$in": event_ids}
-            }
-
-        event_list = EventRepository.filter_events(filters)
-        return format_list_of_events(eventList=event_list)
+        eventList = EventRepository.filter_events(filters)
+        return format_list_of_events(eventList=eventList)
     except Exception as e:
         raise InternalServerError(str(e))
 
-
-def create_event(event: EventSchema):
+def create_event(event: CreateEvent):
     if event.userId == "" and event.clubId == "":
         raise BadRequestException(
             "An event must have either userId or clubId but neither was given.")
     try:
         jsonEvent = jsonable_encoder(event)
-        event_tags = jsonEvent.get("tags", [])
+        eventTags = jsonEvent.get("tags", [])
         jsonEvent.pop("tags")
-        jsonEvent["createdDate"] = datetime.now(UTC)
+        jsonEvent["photos"] = []
+        jsonEvent["createdDate"] = str(datetime.now(UTC))
+        jsonEvent["rating"] = 5.0
+        jsonEvent["chatroomId"] = '' #TODO implement logic for creating a chatroom when an event is created
         createdEvent = EventRepository.insert_event(jsonEvent)
-        if len(event_tags) > 0:
-            insert_tags(event_tags, str(createdEvent.inserted_id))
+        if len(eventTags) > 0:
+            insert_tags(eventTags, str(createdEvent.inserted_id))
     except Exception as e:
         raise InternalServerError(str(e))
     return str(createdEvent.inserted_id)
 
 
 async def upload_event_photos(eventId: str, files: List[UploadFile], isProfile: bool):
-    eventToUpdate = EventRepository.get_by_id(ObjectId(eventId))
-    if not eventToUpdate:
-        raise BadRequestException("No event found with the given eventId")
-    formattedPhotosList = await format_photos_to_insert(files, isProfile)
-    resultantEvent = EventSchema(
-            _id=eventToUpdate["_id"],
-            name=eventToUpdate["name"],
-            location=eventToUpdate["location"],
-            rating=eventToUpdate["rating"],
-            createdDate=eventToUpdate["createdDate"],
-            status=eventToUpdate["status"],
-            type=eventToUpdate["type"],
-            description=eventToUpdate["description"],
-            userId=eventToUpdate["userId"],
-            clubId=eventToUpdate["clubId"],
-            startDate=eventToUpdate["startDate"],
-            endDate=eventToUpdate["endDate"],
-            photos=eventToUpdate["photos"]+formattedPhotosList).to_dict()
-    updatedEvent = EventRepository.update_event_photos(ObjectId(eventId), formattedPhotosList)
-    if updatedEvent.matched_count > 0:
-        return resultantEvent
-    else:
-        raise InternalServerError(
-            f"Error while adding photos for event: {eventId}. Please try again.")
-
+    foundEventCursor = EventRepository.get_by_id(ObjectId(eventId))
+    if foundEventCursor._has_next():
+        foundEvent = foundEventCursor.next()
+        formattedPhotosList = await format_photos_to_insert(files, isProfile)
+        resultantEvent = EventFactory.create_event(foundEvent).to_dict()
+        resultantEvent["photos"] = resultantEvent["photos"] + formattedPhotosList
+        updatedEvent = EventRepository.update_event_photos(ObjectId(eventId), formattedPhotosList)
+        if updatedEvent.matched_count > 0:
+            return resultantEvent
+        else:
+            raise InternalServerError(
+                f"Error while adding photos for event: {eventId}. Please try again.")
+    raise BadRequestException("No event found with the given eventId")
 
 def find_by_id(event_id: str):
     try:
-        found_event = EventRepository.get_by_id(ObjectId(event_id))
-        if found_event != None:
-            event_tags = get_labels_from_event_id(event_id)
-            if found_event["clubId"] != None:
+        foundEventCursor = EventRepository.get_by_id(ObjectId(event_id))
+        if foundEventCursor._has_next():
+            foundEvent = foundEventCursor.next()
+            if foundEvent["clubId"] != None:
                 found_place = get_event_place(
-                    found_event["clubId"])
-                found_event = {**found_event, "place": found_place}
-
-        return {
-            **found_event,
-            "tags": event_tags,
-            "_id": str(found_event["_id"]),
-            "createdDate": str(found_event["createdDate"]),
-            "photos": format_event_photos(found_event["photos"]) if "photos" in found_event else []
-        }
+                    foundEvent["clubId"])
+                foundEvent = {**foundEvent, "place": found_place}
+            return EventFactory.create_event(foundEvent).to_dict()
     except Exception as e:
         raise InternalServerError(str(e))

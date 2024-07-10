@@ -28,7 +28,7 @@ async def create_user(user: UserSchema):
     user["agoraLiveVideoUser"] = encode_string_to_integer(user["uid"]) #Encode UID to integer and save it as string as mongo's limit are 8-byte integers
     user["profilePicture"] = None
     userRepository.insert_user(user)
-    createdUser = find_user_by_id(user["uid"])
+    createdUser = get_user_by_id(user["uid"])
     return createdUser
 
 
@@ -86,7 +86,7 @@ def update_user(user: UserSchema):
 
 def validate_if_user_exist(user: UserSchema):
     try:
-        foundUser = find_user_by_id(user.uid)
+        foundUser = get_user_by_id(user.uid)
         userPreferences = userPreferencesRepository.find_by_user_uid(user.uid)
     except Exception as e:
         return {"message": "Error while getting user preferences"}
@@ -121,7 +121,7 @@ def find_user_by_email(email: str):
     return foundUser
 
 
-def find_user_by_id(uid: str):
+def get_user_by_id(uid: str):
     foundUser = {}
     if uid != None:
         foundUser = userRepository.find_by_id(uid)
@@ -166,7 +166,7 @@ def get_music_genre_preferences_by_user(uid: str):
         return {"message": "error while fetching user music genre preferences"}
 
 def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
-    updateUser: UserSchema = find_user_by_id(uid)
+    updateUser: UserSchema = get_user_by_id(uid)
 
     if (updateUser == None):
         return {"message": "No user found with that uid"}
@@ -207,7 +207,7 @@ def update_social_media_link(uid: str, socialMediaItem: SocialMedia):
 
 def delete_social_media_link(uid: str, socialMediaItem: SocialMedia):
     userRepository.remove_social_media_link(uid, socialMediaItem)
-    user: UserSchema = find_user_by_id(uid)
+    user: UserSchema = get_user_by_id(uid)
     socialMediaLinks: List[SocialMedia] = user.get('socialMediaLinks')
     return {"message": "OK", "body": socialMediaLinks}
 
@@ -235,11 +235,6 @@ def insert_filter_preference(uid: str, filter: UserFilter):
     updatedPeferences = userPreferencesRepository.insert_filter_preference(
         uid, filter)
     return {"message": "OK", "body": updatedPeferences}
-
-def get_user_photos(uid: str):
-    user = userRepository.find_by_id(uid)
-    userPhotos = list(user['photos'])
-    return {"message": "ok", "body": userPhotos}
 
 def delete_user_photo(userUid: str, photoId: str):
     """ bucketName = constants.AWS_BUCKET_NAME

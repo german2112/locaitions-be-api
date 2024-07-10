@@ -18,9 +18,10 @@ def validate_if_user_in_area(user: UserSchema, event: EventSchema):
 
 def get_event_owner_stream(eventId: str, eventCreatedBy: str):
     try:
-        event: EventSchema = EventRepository.get_by_id(ObjectId(eventId))
-        if not event:
+        foundEventCursor = EventRepository.get_by_id(ObjectId(eventId))
+        if not foundEventCursor._has_next():
             raise BadRequestException(f"No event found with the given eventId: {eventId}")
+        event = foundEventCursor.next()
         eventOwnerFormattedStream = {}
         eventCreatedBy = ""
         if(event['type'] == "Club"): #Gets the owner of the organizer club to validate if it is live streaming
@@ -39,6 +40,8 @@ def get_event_owner_stream(eventId: str, eventCreatedBy: str):
         return eventOwnerFormattedStream
     except ValidationError as e:
         raise InternalServerError(f'Validation error when creating Live stream object. Error: {str(e)}')
+    except BadRequestException as e:
+        raise BadRequestException(str(e))
     except Exception as e:
         raise InternalServerError(f'Error while retrieving live stream of owner: {eventCreatedBy} for event {event._id}. Error: {e}')
     

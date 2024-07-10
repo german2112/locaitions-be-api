@@ -1,10 +1,10 @@
 from pydantic import BaseModel, Field, validator, Extra
 from app.models.Location import LocationSchema
 from app.models.Photo import PhotoSchema
+from app.models.Tag import TagSchema
 from enum import Enum
 from app.validators import DateValidators
 from typing import List, Optional
-from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 
 class EventStatus(Enum):
@@ -18,23 +18,23 @@ class EventSchema(BaseModel):
     class Config:
         arbitrary_types_allowed = True #Allow pydantic to validate arbitrary types
         extra = Extra.forbid
-    _id: str = Field(default=None)
+    id: str = Field(default=None)
     name: str
     location: LocationSchema
     rating: float = Field(le=5, ge=0)
     createdDate: datetime #TODO CHANGE TO DATETIME
     status: EventStatus
     type: str
-    description: str
+    description: str = Field(default="")
     userId: str = Field(default= "")
     clubId: str = Field(default= "")
     startDate: str
     endDate: str
-    tags: str
+    tags: List[TagSchema] = Field(default_factory=[])
     photos: List[PhotoSchema] = Field(default_factory=list)
-    tags: List[str] = Field(default=[])
     capacity: int
-    isPrivate: Optional[bool] = Field(default=False)
+    isPrivate: bool
+    chatroomId: str
 
     @validator('startDate', 'endDate')
     def validate_dates(cls, value):
@@ -42,8 +42,7 @@ class EventSchema(BaseModel):
 
     def to_dict(self):
         eventDict = self.dict()
-        eventDict["location"] = jsonable_encoder(self.location)
+        eventDict["location"] = self.location.to_dict()
         eventDict["createdDate"] = str(self.createdDate)
         eventDict["status"] = self.status.value
-        eventDict["photos"] = jsonable_encoder(self.photos)
         return eventDict

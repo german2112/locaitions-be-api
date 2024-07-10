@@ -2,23 +2,13 @@ from app.repositories import TagRepository as tagRepository
 from bson import ObjectId
 from typing import List
 from pymongo import CursorType
-from app.models.EventFilters import EventFiltersSchema
+from app.schemas.EventFilter import EventFilter
+from app.models.Tag import TagSchema
 import re
 from app.repositories import TagRepository as tagRepository
-from app.models.Photo import PhotoSchema
-from app.factories.AwsFactory import create_aws_session
-from app.utils.ImageUtils import upload_image_to_S3
-from fastapi import UploadFile
-from app.exceptions.InternalServerError import InternalServerError
+from app.factories.EventFactory import EventFactory
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from app.repositories import PlaceRepository as placeRepository
-
-def get_event_ids_from_tags(tags: List[str]):
-    found_events = tagRepository.find_distinct(
-        "event_id", {"label": {"$in": tags}})
-    return [ObjectId(event_id) for event_id in found_events]
-
 
 def get_labels_from_event_id(eventId: str):
     found_labels = tagRepository.find_distinct("label", {"event_id": eventId})
@@ -28,30 +18,12 @@ def get_labels_from_event_id(eventId: str):
 def format_list_of_events(eventList: CursorType):
     formattedEventList = []
     for event in eventList:
-        event_id = str(event["_id"])
-        event_tags = get_labels_from_event_id(eventId=event_id)
-        eventItem = {
-            "_id": event_id,
-            "name": event["name"],
-            "location": event["location"],
-            "status": event["status"],
-            "type": event["type"],
-            "description": event["description"],
-            "userId": event["userId"],
-            "clubId": event["clubId"],
-            "startDate": event["startDate"],
-            "endDate": event["endDate"],
-            "createdDate": str(event["createdDate"]),
-            "tags": event_tags,
-            "capacity": event["capacity"] if "capacity" in event else 0,
-            "photos": format_event_photos(event["photos"]) if "photos" in event else [],
-            "chatroomId": event["chatroomId"]
-        }
-        formattedEventList.append(eventItem)
+        eventItem = EventFactory.create_event(event)
+        formattedEventList.append(eventItem.to_dict())
     return formattedEventList
 
 
-def build_event_filters(event: EventFiltersSchema):
+def build_event_filters(event: EventFilter):
     eventFilters = {}
 
     if (event.name):
@@ -79,35 +51,14 @@ def build_event_filters(event: EventFiltersSchema):
     return eventFilters
 
 
-def insert_tags(tags: List[str], event_id: str):
+def insert_tags(tags: List[TagSchema], event_id: str):
     tags_to_be_created = []
     for tag in tags:
-        tag_item = {
-            "label": re.sub(r'[^a-zA-Z0-9]', '', tag),
-            "event_id": event_id
-        }
-        tags_to_be_created.append(tag_item)
+        tag['label'] = re.sub(r'[^a-zA-Z0-9]', '', tag['label'])
+        tag['event_id'] = event_id
+        tags_to_be_created.append(tag)
 
     return tagRepository.insert_many(tags_to_be_created)
-
-
-async def get_formatted_photos(files: List[UploadFile], isProfile: bool):
-    try:
-        session = create_aws_session()
-        photoUrl = ''
-        formattedPhotosList: List[dict] = []
-        for file in files:
-            photoUrl = await upload_image_to_S3(session, file)
-            photo = PhotoSchema(filename=file.filename,
-                                fileUrl=photoUrl,
-                                createdAt=datetime.now(ZoneInfo('UTC')),
-                                isProfile=isProfile)
-            formattedPhotosList.append(photo.to_dict())
-        return formattedPhotosList
-    except Exception as e:
-        raise InternalServerError(
-            f"Error formatting new event photos. Error: {str(e)}")
-
 
 def get_event_place(placeId: str):
     found_place = placeRepository.get_by_id(ObjectId(placeId))

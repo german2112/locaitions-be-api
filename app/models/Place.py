@@ -1,15 +1,19 @@
 from pydantic import BaseModel, Field
+from app.models.Location import LocationSchema
+from app.models.Photo import PhotoSchema
 from typing import List
-from .Exclusivity import ExclusivitySchema
-from .Promotion import PromotionSchema
-from .Event import EventSchema
+
 class PlaceSchema(BaseModel):
-    uid: str = Field(None)
-    name: str = Field(None, max_length=40)
-    address: str = Field(None, max_length=100)
-    category: str = Field(None, max_length=30)
-    minimumDistance: float = Field(None)
-    exclusivity: ExclusivitySchema = Field(None)
-    promotions: List[PromotionSchema] = Field(None)
-    event: List[EventSchema] = Field(None)
-    description: str = Field(None)
+    id: str
+    name: str
+    category: str
+    location: LocationSchema
+    avgRating: float = Field(le=5, ge=0, default=0.0)
+    ownerId: str
+    description: str
+    photos: List[PhotoSchema] = Field(default_factory=list)
+
+    def to_dict(self):
+        placeDict = self.dict()
+        placeDict["location"] = self.location.to_dict()
+        return placeDict

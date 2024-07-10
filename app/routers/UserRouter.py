@@ -11,7 +11,7 @@ from typing import Annotated
 from fastapi import UploadFile, Form
 from typing import List
 from app.entities.Filter import UserFilter
-from app.utils.ResponseUtils import get_unsuccessful_response
+from app.utils.ResponseUtils import get_unsuccessful_response, get_successful_response
 from app.common.token_verification import verify_firebase_token
 
 userRouter = APIRouter(prefix="/user")
@@ -39,10 +39,10 @@ def validate_username(userName: str, decoded_token: dict = Depends(verify_fireba
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 
-@userRouter.get("/profile/{uid}", response_description="public Profile user information", response_model=UserSchema, tags=["User", "Public", "Profile"])
-def get_public_profile(uid: str, decoded_token: dict = Depends(verify_firebase_token)):
-    response = typeUtilities.parse_json(userService.get_public_profile(uid))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+@userRouter.get("/{uid}", response_description="Get user by Id", response_model=UserSchema, tags=["User", "Public", "Profile"])
+def get_by_id(uid: str, decoded_token: dict = Depends(verify_firebase_token)):
+    response = typeUtilities.parse_json(userService.get_user_by_id(uid))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=get_successful_response(response))
 
 
 @userRouter.get("/user-preferences/{uid}", response_description="Get list of music genres for user", response_model=UserPreferenceResponse, tags=["MusicGenre"])

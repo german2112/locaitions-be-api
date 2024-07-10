@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
 from app.models.Event import EventStatus
 from app.models.Location import LocationSchema
-from typing import List, Optional
+from typing import List
 
-class EventFiltersSchema(BaseModel):
+class EventFilter(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True #Allow pydantic to validate arbitrary types

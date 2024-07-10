@@ -2,10 +2,11 @@ import fastapi
 from app.routers import UserRouter as userRouter
 from app.routers import PlaceRouter as placerRouter
 from app.routers import MusicGenreRouter as musicGenreRouter
-from app.routers import PhotoRouter as photoRouter
 from app.routers import AgoraRouter as agoraRouter
 from app.routers import EventRouter as eventRouter
+from app.routers import ChatRouter as chatRouter
 from app.routers import LiveVideoRouter as liveStreamRouter
+from app.routers import EventLiveSpaceRouter as eventLiveSpaceRouter
 from app.routers import TagsRouter as tagsRouter
 from app.routers import FavoriteEventRouter as favoriteEventRouter
 from app.routers import JoinEventRequestRouter as joinEventRequestRouter
@@ -31,13 +32,14 @@ app.add_middleware(
 app.include_router(userRouter.userRouter)
 app.include_router(placerRouter.placeRouter)
 app.include_router(musicGenreRouter.userRouter)
-app.include_router(photoRouter.userRouter)
 app.include_router(agoraRouter.agoraRouter)
 app.include_router(liveStreamRouter.liveVideoRouter)
 app.include_router(eventRouter.eventRouter)
 app.include_router(tagsRouter.tagsRouter)
 app.include_router(favoriteEventRouter.favoriteEventRouter)
 app.include_router(joinEventRequestRouter.joinEventRequestRouter)
+app.include_router(chatRouter.chatRouter)
+app.include_router(eventLiveSpaceRouter.eventLiveSpaceRouter)
 
 add_pagination(app)
 

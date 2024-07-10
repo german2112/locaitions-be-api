@@ -3,6 +3,7 @@ from typing import List
 from .Membership import MembershipSchema
 from .Role import RoleSchema
 from .Place import PlaceSchema
+from app.models.Photo import PhotoSchema
 from enum import Enum
 from app.models.UserPreferences import UserPreferencesSchema
 from typing import Optional
@@ -48,8 +49,9 @@ class UserSchema(BaseModel):
     nationality: str = Field(None)
     preferences: UserPreferencesSchema = Field(None)
     agoraChatUser: str = Field(None)
-    agoraLiveVideoUser: int = Field(None)  # TODO Change to required
-
+    agoraLiveVideoUser: int= Field(None) #TODO Change to required
+    photos: List[PhotoSchema] = Field(default_factory=list)
+    
     def to_dict(self):
         exclude_keys = ['__special__', 'function_variable']
 

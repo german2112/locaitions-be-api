@@ -3,9 +3,10 @@ from app.factories.AwsFactory import create_aws_session
 from app.models.Photo import PhotoSchema
 from typing import List
 from fastapi import UploadFile
-from datetime import datetime, UTC
+from datetime import datetime
 from app.exceptions.InternalServerError import InternalServerError
 import uuid
+from zoneinfo import ZoneInfo
 
 async def format_photos_to_insert(files: List[UploadFile], isProfile: bool):
     try:
@@ -18,7 +19,7 @@ async def format_photos_to_insert(files: List[UploadFile], isProfile: bool):
             photo = PhotoSchema(id=photoUUID,
                                 filename=file.filename, 
                                 fileUrl=photoUrl, 
-                                createdAt=str(datetime.now(UTC)), 
+                                createdAt=str(datetime.now(ZoneInfo('UTC'))), 
                                 isProfile=isProfile)
             formattedPhotosList.append(photo.to_dict())
         return formattedPhotosList

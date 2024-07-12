@@ -7,7 +7,7 @@ from app.models.User import SocialMedia
 from typing import List
 from fastapi.encoders import jsonable_encoder
 from fastapi import UploadFile
-from datetime import datetime, UTC
+from datetime import datetime
 import os
 from copy import deepcopy
 from app.entities.Filter import UserFilter

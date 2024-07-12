@@ -2,7 +2,7 @@ from app.schemas.EventFilter import EventFilter
 from app.schemas.CreateEvent import CreateEvent
 from app.factories.EventFactory import EventFactory
 from app.repositories import EventRepository
-from datetime import datetime, UTC
+from datetime import datetime
 from fastapi.encoders import jsonable_encoder
 from app.exceptions.BadRequestException import BadRequestException
 from app.exceptions.InternalServerError import InternalServerError
@@ -12,6 +12,7 @@ from bson import ObjectId
 from app.exceptions.BadRequestException import BadRequestException
 from app.helpers.PhotoHelper import format_photos_to_insert
 from app.helpers.EventHelper import build_event_filters, get_labels_from_event_id, get_event_place, format_event_photos, format_list_of_events, insert_tags
+from zoneinfo import ZoneInfo
 
 def get_events_by_filter(event: EventFilter):
     filters = build_event_filters(event)
@@ -31,7 +32,7 @@ def create_event(event: CreateEvent):
         eventTags = jsonEvent.get("tags", [])
         jsonEvent.pop("tags")
         jsonEvent["photos"] = []
-        jsonEvent["createdDate"] = str(datetime.now(UTC))
+        jsonEvent["createdDate"] = str(datetime.now(ZoneInfo('UTC')))
         jsonEvent["rating"] = 5.0
         jsonEvent["chatroomId"] = '' #TODO implement logic for creating a chatroom when an event is created
         createdEvent = EventRepository.insert_event(jsonEvent)

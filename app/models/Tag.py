@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field
-from datetime import datetime, UTC
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 class TagSchema(BaseModel):
     label: str
-    created_at: datetime = Field(default=datetime.now(UTC))
+    created_at: datetime = Field(default=datetime.now(ZoneInfo('UTC')))
     event_id: str
 
     def to_dict(self):
